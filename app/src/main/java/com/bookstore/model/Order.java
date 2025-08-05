@@ -1,24 +1,26 @@
 package com.bookstore.model;
 
 import java.sql.Date;
+import java.util.List;
 
 public class Order {
     private int orderId;
     private int customerId;
     private Date orderDate;
     private double totalAmount;
-    private Enum<OrderStatus> status;
-
+    private OrderStatus status;
+    private List<OrderItem> orderItems;
     // Constructor
     public Order() {
     }
 
-    public Order(int orderId, int customerId, Date orderDate, double totalAmount, Enum<OrderStatus> status) {
+    public Order(int orderId, int customerId, Date orderDate, double totalAmount, OrderStatus status, List<OrderItem> orderItems) {
         this.orderId = orderId;
         this.customerId = customerId;
         this.orderDate = orderDate;
         this.totalAmount = totalAmount;
         this.status = status;
+        this.orderItems = orderItems;
     }
 
     // Getters and Setters
@@ -54,9 +56,17 @@ public class Order {
         this.totalAmount = totalAmount;
     }
 
-    public Enum<OrderStatus> getStatus() { return status; }
+    public OrderStatus getStatus() { return status; }
 
-    public void setStatus(Enum<OrderStatus> status) { this.status = status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
 
     @Override
     public String toString() {
@@ -66,6 +76,7 @@ public class Order {
                 ", orderDate=" + orderDate +
                 ", totalAmount=" + totalAmount +
                 ", status=" + status +
+                ", orderItems=" + orderItems +
                 '}';
     }
 }
