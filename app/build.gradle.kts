@@ -8,6 +8,9 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
+    // Add Spring Boot plugin for web functionality
+    id("org.springframework.boot") version "3.2.0"
+    id("io.spring.dependency-management") version "1.1.4"
 }
 
 repositories {
@@ -26,6 +29,14 @@ dependencies {
 
     // MySQL JDBC Driver
     implementation("mysql:mysql-connector-java:8.0.33")
+    
+    // Spring Boot Web dependencies for API layer
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    
+    // Optional: For better web UI styling
+    implementation("org.webjars:bootstrap:5.3.2")
+    implementation("org.webjars:jquery:3.7.1")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
