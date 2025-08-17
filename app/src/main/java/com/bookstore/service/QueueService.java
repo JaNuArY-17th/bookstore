@@ -6,7 +6,6 @@ import com.bookstore.model.Role;
 import com.bookstore.model.OrderStatus;
 import com.bookstore.dao.OrderDAO;
 import com.bookstore.util.queue.OrderQueueManager;
-import com.bookstore.util.queue.QueueADT;
 
 import java.util.List;
 import java.util.ArrayList;
