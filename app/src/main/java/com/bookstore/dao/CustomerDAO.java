@@ -89,14 +89,25 @@ public class CustomerDAO {
     }
 
     public boolean updateCustomer(Customer customer) {
-        String sql = "UPDATE Customers SET name = ?, email = ?, address = ? WHERE customer_id = ?";
+        String sql = "UPDATE Customers SET name = ?, email = ?, phone = ?, address = ?, " +
+                    "city = ?, state = ?, postal_code = ?, country = ?, " +
+                    "preferred_payment_method = ?, email_notifications = ? " +
+                    "WHERE customer_id = ?";
+
         try (Connection conn = DBConnection.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, customer.getName());
             pstmt.setString(2, customer.getEmail());
-            pstmt.setString(3, customer.getAddress());
-            pstmt.setInt(4, customer.getCustomerId());
+            pstmt.setString(3, customer.getPhoneNumber());
+            pstmt.setString(4, customer.getAddress());
+            pstmt.setString(5, customer.getCity());
+            pstmt.setString(6, customer.getState());
+            pstmt.setString(7, customer.getPostalCode());
+            pstmt.setString(8, customer.getCountry());
+            pstmt.setString(9, customer.getPreferredPaymentMethod());
+            pstmt.setBoolean(10, customer.isEmailNotifications());
+            pstmt.setInt(11, customer.getCustomerId());
 
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
@@ -151,5 +162,70 @@ public class CustomerDAO {
             System.err.println("Error getting all customers: " + e.getMessage());
         }
         return customers;
+    }
+
+    /**
+     * Get customer by user ID (for registered customers)
+     * @param userId The user ID from Users table
+     * @return Customer object if found, null otherwise
+     */
+    public Customer getCustomerByUserId(int userId) {
+        String sql = "SELECT * FROM Customers WHERE user_id = ?";
+        Customer customer = null;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    customer = new Customer();
+                    customer.setCustomerId(rs.getInt("customer_id"));
+                    customer.setName(rs.getString("name"));
+                    customer.setEmail(rs.getString("email"));
+                    customer.setAddress(rs.getString("address"));
+                    // Set other customer fields as needed
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting customer by user ID: " + e.getMessage());
+        }
+        return customer;
+    }
+
+
+
+    /**
+     * Update customer profile by user ID (for registered customers)
+     * @param userId The user ID
+     * @param customer Customer object with updated information
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateCustomerByUserId(int userId, Customer customer) {
+        String sql = "UPDATE Customers SET name = ?, phone = ?, address = ?, " +
+                    "city = ?, state = ?, postal_code = ?, country = ?, " +
+                    "preferred_payment_method = ?, email_notifications = ? " +
+                    "WHERE user_id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, customer.getName());
+            pstmt.setString(2, customer.getPhoneNumber());
+            pstmt.setString(3, customer.getAddress());
+            pstmt.setString(4, customer.getCity());
+            pstmt.setString(5, customer.getState());
+            pstmt.setString(6, customer.getPostalCode());
+            pstmt.setString(7, customer.getCountry());
+            pstmt.setString(8, customer.getPreferredPaymentMethod());
+            pstmt.setBoolean(9, customer.isEmailNotifications());
+            pstmt.setInt(10, userId);
+
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating customer by user ID: " + e.getMessage());
+            return false;
+        }
     }
 }
