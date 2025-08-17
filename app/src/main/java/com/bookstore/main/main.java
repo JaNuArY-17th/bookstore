@@ -9,6 +9,7 @@ import com.bookstore.model.Customer;
 import com.bookstore.model.Order;
 import com.bookstore.model.OrderItem;
 import com.bookstore.model.User;
+import com.bookstore.model.Customer;
 import com.bookstore.model.Role;
 import com.bookstore.service.OrderService;
 import com.bookstore.service.AuthService;
@@ -778,7 +779,7 @@ public class Main {
 
         // Create customer account
         String hashedPassword = com.bookstore.util.PasswordUtil.hashPassword(password);
-        User newCustomer = new User(username, hashedPassword, email, firstName, lastName, Role.CUSTOMER);
+        Customer newCustomer = new Customer(username, hashedPassword, email, firstName, lastName);
 
         int userId = userDAO.addUser(newCustomer);
         if (userId != -1) {

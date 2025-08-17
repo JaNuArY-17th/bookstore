@@ -2,6 +2,8 @@ package com.bookstore.service;
 
 import com.bookstore.dao.UserDAO;
 import com.bookstore.model.User;
+import com.bookstore.model.Admin;
+import com.bookstore.model.Customer;
 import com.bookstore.model.Role;
 import com.bookstore.util.PasswordUtil;
 
@@ -76,8 +78,8 @@ public class AuthService {
         }
 
         String hashedPassword = PasswordUtil.hashPassword(password);
-        User newCustomer = new User(username, hashedPassword, email, firstName, lastName, Role.CUSTOMER);
-        
+        Customer newCustomer = new Customer(username, hashedPassword, email, firstName, lastName);
+
         int userId = userDAO.addUser(newCustomer);
         return userId != -1;
     }
@@ -93,7 +95,7 @@ public class AuthService {
         }
 
         String hashedPassword = PasswordUtil.hashPassword(password);
-        User newAdmin = new User(username, hashedPassword, email, firstName, lastName, Role.ADMIN);
+        Admin newAdmin = new Admin(username, hashedPassword, email, firstName, lastName);
 
         int userId = userDAO.addUser(newAdmin);
         return userId != -1;
@@ -110,7 +112,13 @@ public class AuthService {
         }
 
         String hashedPassword = PasswordUtil.hashPassword(password);
-        User newUser = new User(username, hashedPassword, email, firstName, lastName, role);
+        User newUser;
+
+        if (role == Role.ADMIN) {
+            newUser = new Admin(username, hashedPassword, email, firstName, lastName);
+        } else {
+            newUser = new Customer(username, hashedPassword, email, firstName, lastName);
+        }
 
         int userId = userDAO.addUser(newUser);
         return userId != -1;

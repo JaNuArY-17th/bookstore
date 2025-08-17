@@ -11,7 +11,7 @@ USE online_bookstore_db;
 ALTER DATABASE online_bookstore_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- =====================================================
--- 1. Users Table (Authentication & Authorization)
+-- 1. Users Table (Base User Information - Abstract Superclass)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS Users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -25,17 +25,87 @@ CREATE TABLE IF NOT EXISTS Users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     -- Indexes for performance
     INDEX idx_username (username),
     INDEX idx_email (email),
     INDEX idx_role (role),
     INDEX idx_active (is_active),
     INDEX idx_created_at (created_at)
-) ENGINE=InnoDB COMMENT='User accounts for authentication and authorization';
+) ENGINE=InnoDB COMMENT='Base user accounts for authentication and authorization (Abstract Superclass)';
 
 -- =====================================================
--- 2. Books Table (Inventory Management)
+-- 2. Admins Table (Admin-specific Information - Subclass)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS Admins (
+    admin_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNIQUE NOT NULL,
+    department VARCHAR(100) NULL COMMENT 'Admin department (IT, Sales, Management, etc.)',
+    admin_level ENUM('STAFF', 'MANAGER', 'SUPER_ADMIN') NOT NULL DEFAULT 'STAFF',
+    permissions JSON NULL COMMENT 'JSON array of specific permissions',
+    employee_id VARCHAR(50) NULL COMMENT 'Employee identification number',
+    hire_date DATE NULL,
+    supervisor_id INT NULL COMMENT 'Reference to supervising admin',
+    office_location VARCHAR(100) NULL,
+    phone_extension VARCHAR(10) NULL,
+    emergency_contact VARCHAR(255) NULL,
+    notes TEXT NULL COMMENT 'Administrative notes about the admin',
+
+    -- Foreign key constraints
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (supervisor_id) REFERENCES Admins(admin_id) ON DELETE SET NULL,
+
+    -- Indexes for performance
+    INDEX idx_user_id (user_id),
+    INDEX idx_department (department),
+    INDEX idx_admin_level (admin_level),
+    INDEX idx_employee_id (employee_id),
+    INDEX idx_supervisor_id (supervisor_id),
+    INDEX idx_hire_date (hire_date)
+) ENGINE=InnoDB COMMENT='Admin-specific information and permissions (Subclass of Users)';
+
+-- =====================================================
+-- 3. Customers Table (Customer-specific Information - Subclass)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS Customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNIQUE NULL COMMENT 'Reference to Users table for registered customers',
+    name VARCHAR(255) NOT NULL COMMENT 'Full name for guest customers or display name',
+    email VARCHAR(100) NOT NULL COMMENT 'Email for guest customers or reference',
+    phone VARCHAR(20) NULL,
+    address TEXT NULL,
+    city VARCHAR(100) NULL,
+    state VARCHAR(100) NULL,
+    postal_code VARCHAR(20) NULL,
+    country VARCHAR(100) DEFAULT 'USA',
+    date_of_birth DATE NULL,
+    preferred_payment_method VARCHAR(50) NULL,
+    email_notifications BOOLEAN DEFAULT TRUE,
+    marketing_consent BOOLEAN DEFAULT FALSE,
+    loyalty_points INT DEFAULT 0,
+    customer_type ENUM('GUEST', 'REGISTERED', 'PREMIUM') DEFAULT 'GUEST',
+    total_orders INT DEFAULT 0,
+    total_spent DECIMAL(10, 2) DEFAULT 0.00,
+    last_order_date TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    -- Foreign key constraints
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+
+    -- Indexes for performance
+    INDEX idx_user_id (user_id),
+    INDEX idx_email (email),
+    INDEX idx_name (name),
+    INDEX idx_phone (phone),
+    INDEX idx_city (city),
+    INDEX idx_customer_type (customer_type),
+    INDEX idx_loyalty_points (loyalty_points),
+    INDEX idx_last_order_date (last_order_date)
+) ENGINE=InnoDB COMMENT='Customer-specific information and preferences (Subclass of Users + Guest customers)';
+
+-- =====================================================
+-- 4. Books Table (Inventory Management)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS Books (
     book_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -64,31 +134,7 @@ CREATE TABLE IF NOT EXISTS Books (
 ) ENGINE=InnoDB COMMENT='Book inventory and catalog';
 
 -- =====================================================
--- 3. Customers Table (Customer Management)
--- =====================================================
-CREATE TABLE IF NOT EXISTS Customers (
-    customer_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    phone VARCHAR(20) NULL,
-    address TEXT NULL,
-    city VARCHAR(100) NULL,
-    state VARCHAR(100) NULL,
-    postal_code VARCHAR(20) NULL,
-    country VARCHAR(100) DEFAULT 'USA',
-    date_of_birth DATE NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    -- Indexes for performance
-    INDEX idx_email (email),
-    INDEX idx_name (name),
-    INDEX idx_phone (phone),
-    INDEX idx_city (city)
-) ENGINE=InnoDB COMMENT='Customer information and contact details';
-
--- =====================================================
--- 4. Orders Table (Order Management)
+-- 5. Orders Table (Order Management)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS Orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -126,7 +172,7 @@ CREATE TABLE IF NOT EXISTS Orders (
 ) ENGINE=InnoDB COMMENT='Customer orders and order tracking';
 
 -- =====================================================
--- 5. OrderItems Table (Order Line Items)
+-- 6. OrderItems Table (Order Line Items)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS OrderItems (
     order_item_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -150,7 +196,7 @@ CREATE TABLE IF NOT EXISTS OrderItems (
 ) ENGINE=InnoDB COMMENT='Individual items within orders';
 
 -- =====================================================
--- 6. Order Status History (Audit Trail)
+-- 7. Order Status History (Audit Trail)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS OrderStatusHistory (
     history_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -172,7 +218,7 @@ CREATE TABLE IF NOT EXISTS OrderStatusHistory (
 ) ENGINE=InnoDB COMMENT='Audit trail for order status changes';
 
 -- =====================================================
--- 7. Inventory Transactions (Stock Movement Tracking)
+-- 8. Inventory Transactions (Stock Movement Tracking)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS InventoryTransactions (
     transaction_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -199,7 +245,7 @@ CREATE TABLE IF NOT EXISTS InventoryTransactions (
 ) ENGINE=InnoDB COMMENT='Track all inventory movements and changes';
 
 -- =====================================================
--- 8. User Sessions (Optional - for web sessions)
+-- 9. User Sessions (Optional - for web sessions)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS UserSessions (
     session_id VARCHAR(128) PRIMARY KEY,
@@ -306,7 +352,7 @@ ORDER BY stock_quantity ASC;
 
 -- View for sales summary
 CREATE OR REPLACE VIEW SalesSummary AS
-SELECT 
+SELECT
     DATE(o.order_date) AS sale_date,
     COUNT(o.order_id) AS orders_count,
     SUM(o.total_amount) AS total_sales,
@@ -317,6 +363,78 @@ JOIN OrderItems oi ON o.order_id = oi.order_id
 WHERE o.status IN ('DELIVERED', 'SHIPPED')
 GROUP BY DATE(o.order_date)
 ORDER BY sale_date DESC;
+
+-- View for complete user information (Users with their specific role data)
+CREATE OR REPLACE VIEW CompleteUserInfo AS
+SELECT
+    u.user_id,
+    u.username,
+    u.email,
+    CONCAT(u.first_name, ' ', u.last_name) AS full_name,
+    u.role,
+    u.is_active,
+    u.created_at,
+    u.last_login,
+    -- Admin specific fields
+    a.admin_id,
+    a.department,
+    a.admin_level,
+    a.employee_id,
+    a.hire_date,
+    a.supervisor_id,
+    -- Customer specific fields
+    c.customer_id,
+    c.phone,
+    c.address,
+    c.city,
+    c.state,
+    c.postal_code,
+    c.customer_type,
+    c.loyalty_points,
+    c.total_orders,
+    c.total_spent,
+    c.last_order_date
+FROM Users u
+LEFT JOIN Admins a ON u.user_id = a.user_id AND u.role = 'ADMIN'
+LEFT JOIN Customers c ON u.user_id = c.user_id AND u.role = 'CUSTOMER';
+
+-- View for admin hierarchy
+CREATE OR REPLACE VIEW AdminHierarchy AS
+SELECT
+    a.admin_id,
+    u.username,
+    CONCAT(u.first_name, ' ', u.last_name) AS admin_name,
+    a.department,
+    a.admin_level,
+    a.employee_id,
+    s.admin_id AS supervisor_admin_id,
+    su.username AS supervisor_username,
+    CONCAT(su.first_name, ' ', su.last_name) AS supervisor_name
+FROM Admins a
+JOIN Users u ON a.user_id = u.user_id
+LEFT JOIN Admins s ON a.supervisor_id = s.admin_id
+LEFT JOIN Users su ON s.user_id = su.user_id;
+
+-- View for customer statistics
+CREATE OR REPLACE VIEW CustomerStatistics AS
+SELECT
+    c.customer_id,
+    c.name,
+    c.email,
+    c.customer_type,
+    c.loyalty_points,
+    c.total_orders,
+    c.total_spent,
+    c.last_order_date,
+    CASE
+        WHEN c.total_spent >= 1000 THEN 'VIP'
+        WHEN c.total_spent >= 500 THEN 'Premium'
+        WHEN c.total_spent >= 100 THEN 'Regular'
+        ELSE 'New'
+    END AS customer_tier,
+    DATEDIFF(CURDATE(), c.last_order_date) AS days_since_last_order
+FROM Customers c
+WHERE c.customer_type IN ('REGISTERED', 'PREMIUM');
 
 -- =====================================================
 -- INDEXES FOR PERFORMANCE OPTIMIZATION
@@ -403,6 +521,85 @@ BEGIN
     );
 END//
 
+-- Procedure to create a new admin user
+CREATE PROCEDURE CreateAdminUser(
+    IN p_username VARCHAR(50),
+    IN p_password VARCHAR(255),
+    IN p_email VARCHAR(100),
+    IN p_first_name VARCHAR(50),
+    IN p_last_name VARCHAR(50),
+    IN p_department VARCHAR(100),
+    IN p_admin_level VARCHAR(20),
+    IN p_employee_id VARCHAR(50)
+)
+BEGIN
+    DECLARE v_user_id INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- Insert into Users table
+    INSERT INTO Users (username, password, email, first_name, last_name, role)
+    VALUES (p_username, p_password, p_email, p_first_name, p_last_name, 'ADMIN');
+
+    SET v_user_id = LAST_INSERT_ID();
+
+    -- Insert into Admins table
+    INSERT INTO Admins (user_id, department, admin_level, employee_id, hire_date)
+    VALUES (v_user_id, p_department, p_admin_level, p_employee_id, CURDATE());
+
+    COMMIT;
+
+    SELECT v_user_id AS user_id, 'Admin user created successfully' AS message;
+END//
+
+-- Procedure to create a new customer user
+CREATE PROCEDURE CreateCustomerUser(
+    IN p_username VARCHAR(50),
+    IN p_password VARCHAR(255),
+    IN p_email VARCHAR(100),
+    IN p_first_name VARCHAR(50),
+    IN p_last_name VARCHAR(50),
+    IN p_address TEXT,
+    IN p_city VARCHAR(100),
+    IN p_state VARCHAR(100),
+    IN p_postal_code VARCHAR(20)
+)
+BEGIN
+    DECLARE v_user_id INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- Insert into Users table
+    INSERT INTO Users (username, password, email, first_name, last_name, role)
+    VALUES (p_username, p_password, p_email, p_first_name, p_last_name, 'CUSTOMER');
+
+    SET v_user_id = LAST_INSERT_ID();
+
+    -- Insert into Customers table
+    INSERT INTO Customers (user_id, name, email, address, city, state, postal_code, customer_type)
+    VALUES (v_user_id, CONCAT(p_first_name, ' ', p_last_name), p_email, p_address, p_city, p_state, p_postal_code, 'REGISTERED');
+
+    COMMIT;
+
+    SELECT v_user_id AS user_id, 'Customer user created successfully' AS message;
+END//
+
+-- Procedure to get complete user information
+CREATE PROCEDURE GetCompleteUserInfo(IN p_user_id INT)
+BEGIN
+    SELECT * FROM CompleteUserInfo WHERE user_id = p_user_id;
+END//
+
 DELIMITER ;
 
 -- =====================================================
@@ -410,8 +607,63 @@ DELIMITER ;
 -- =====================================================
 
 -- Insert default admin user (password is hashed: password@123)
-INSERT IGNORE INTO Users (username, password, email, first_name, last_name, role) 
+INSERT IGNORE INTO Users (username, password, email, first_name, last_name, role)
 VALUES ('admin', 'TRukV3lw+q2bWDcz23H19sT2/d7baPuO3eYor1UVa4M9f7lt5/D8nn356PaogG30', 'admin@bookstore.com', 'System', 'Administrator', 'ADMIN');
+
+-- Insert admin details for the default admin user
+INSERT IGNORE INTO Admins (user_id, department, admin_level, permissions, employee_id, hire_date, office_location)
+SELECT
+    u.user_id,
+    'IT',
+    'SUPER_ADMIN',
+    '["ALL"]',
+    'EMP001',
+    CURDATE(),
+    'Main Office'
+FROM Users u
+WHERE u.username = 'admin' AND u.role = 'ADMIN';
+
+-- Insert sample customer users
+INSERT IGNORE INTO Users (username, password, email, first_name, last_name, role) VALUES
+('john_smith', 'TRukV3lw+q2bWDcz23H19sT2/d7baPuO3eYor1UVa4M9f7lt5/D8nn356PaogG30', 'john.smith@email.com', 'John', 'Smith', 'CUSTOMER'),
+('jane_doe', 'TRukV3lw+q2bWDcz23H19sT2/d7baPuO3eYor1UVa4M9f7lt5/D8nn356PaogG30', 'jane.doe@email.com', 'Jane', 'Doe', 'CUSTOMER'),
+('bob_johnson', 'TRukV3lw+q2bWDcz23H19sT2/d7baPuO3eYor1UVa4M9f7lt5/D8nn356PaogG30', 'bob.johnson@email.com', 'Bob', 'Johnson', 'CUSTOMER');
+
+-- Insert customer details for registered customers
+INSERT IGNORE INTO Customers (user_id, name, email, address, city, state, postal_code, customer_type, preferred_payment_method)
+SELECT
+    u.user_id,
+    CONCAT(u.first_name, ' ', u.last_name),
+    u.email,
+    CASE
+        WHEN u.username = 'john_smith' THEN '123 Main St'
+        WHEN u.username = 'jane_doe' THEN '456 Oak Ave'
+        WHEN u.username = 'bob_johnson' THEN '789 Pine Rd'
+    END,
+    CASE
+        WHEN u.username = 'john_smith' THEN 'New York'
+        WHEN u.username = 'jane_doe' THEN 'Los Angeles'
+        WHEN u.username = 'bob_johnson' THEN 'Chicago'
+    END,
+    CASE
+        WHEN u.username = 'john_smith' THEN 'NY'
+        WHEN u.username = 'jane_doe' THEN 'CA'
+        WHEN u.username = 'bob_johnson' THEN 'IL'
+    END,
+    CASE
+        WHEN u.username = 'john_smith' THEN '10001'
+        WHEN u.username = 'jane_doe' THEN '90210'
+        WHEN u.username = 'bob_johnson' THEN '60601'
+    END,
+    'REGISTERED',
+    'Credit Card'
+FROM Users u
+WHERE u.role = 'CUSTOMER' AND u.username IN ('john_smith', 'jane_doe', 'bob_johnson');
+
+-- Insert guest customers (customers without user accounts)
+INSERT IGNORE INTO Customers (name, email, address, city, state, postal_code, customer_type) VALUES
+('Alice Brown', 'alice.brown@email.com', '321 Elm St', 'Houston', 'TX', '77001', 'GUEST'),
+('Charlie Wilson', 'charlie.wilson@email.com', '654 Maple Dr', 'Phoenix', 'AZ', '85001', 'GUEST');
 
 -- Insert sample books
 INSERT IGNORE INTO Books (title, author, isbn, price, stock_quantity, description, category) VALUES
@@ -424,13 +676,7 @@ INSERT IGNORE INTO Books (title, author, isbn, price, stock_quantity, descriptio
 ('Clean Code', 'Robert C. Martin', '978-0-13-235088-4', 42.99, 15, 'A handbook of agile software craftsmanship', 'Technology'),
 ('Design Patterns', 'Gang of Four', '978-0-20-163361-0', 54.99, 10, 'Elements of reusable object-oriented software', 'Technology');
 
--- Insert sample customers
-INSERT IGNORE INTO Customers (name, email, address, city, state, postal_code) VALUES
-('John Smith', 'john.smith@email.com', '123 Main St', 'New York', 'NY', '10001'),
-('Jane Doe', 'jane.doe@email.com', '456 Oak Ave', 'Los Angeles', 'CA', '90210'),
-('Bob Johnson', 'bob.johnson@email.com', '789 Pine Rd', 'Chicago', 'IL', '60601'),
-('Alice Brown', 'alice.brown@email.com', '321 Elm St', 'Houston', 'TX', '77001'),
-('Charlie Wilson', 'charlie.wilson@email.com', '654 Maple Dr', 'Phoenix', 'AZ', '85001');
+
 
 -- =====================================================
 -- SECURITY AND MAINTENANCE
@@ -458,6 +704,9 @@ SET GLOBAL event_scheduler = ON;
 -- =====================================================
 -- COMPLETION MESSAGE
 -- =====================================================
-SELECT 'Database schema created successfully!' AS Status,
-       'Default admin user: admin (change password on first login)' AS Note,
-       'Sample data inserted for testing' AS SampleData;
+SELECT 'Database schema created successfully with inheritance structure!' AS Status,
+       'Users table serves as abstract superclass' AS Architecture,
+       'Admins and Customers tables extend Users with role-specific data' AS Inheritance,
+       'Default admin user: admin (password: password@123)' AS AdminLogin,
+       'Sample registered customers and guest customers created' AS SampleData,
+       'Use CompleteUserInfo view for full user details' AS ViewInfo;

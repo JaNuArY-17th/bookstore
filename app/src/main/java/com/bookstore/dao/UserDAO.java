@@ -1,6 +1,8 @@
 package com.bookstore.dao;
 
 import com.bookstore.model.User;
+import com.bookstore.model.Admin;
+import com.bookstore.model.Customer;
 import com.bookstore.model.Role;
 import com.bookstore.util.DBConnection;
 
@@ -173,17 +175,28 @@ public class UserDAO {
     }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
-        User user = new User();
+        Role role = Role.valueOf(rs.getString("role"));
+        User user;
+
+        // Create appropriate subclass based on role
+        if (role == Role.ADMIN) {
+            user = new Admin();
+        } else {
+            user = new Customer();
+        }
+
+        // Set common properties
         user.setUserId(rs.getInt("user_id"));
         user.setUsername(rs.getString("username"));
         user.setPassword(rs.getString("password"));
         user.setEmail(rs.getString("email"));
         user.setFirstName(rs.getString("first_name"));
         user.setLastName(rs.getString("last_name"));
-        user.setRole(Role.valueOf(rs.getString("role")));
+        user.setRole(role);
         user.setActive(rs.getBoolean("is_active"));
         user.setCreatedAt(rs.getTimestamp("created_at"));
         user.setLastLogin(rs.getTimestamp("last_login"));
+
         return user;
     }
 }

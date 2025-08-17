@@ -3,19 +3,20 @@ package com.bookstore.model;
 import java.sql.Timestamp;
 
 /**
- * User model for authentication and authorization
+ * Abstract User model for authentication and authorization
+ * Serves as superclass for Admin and Customer
  */
-public class User {
-    private int userId;
-    private String username;
-    private String password; // In production, this should be hashed
-    private String email;
-    private String firstName;
-    private String lastName;
-    private Role role;
-    private boolean isActive;
-    private Timestamp createdAt;
-    private Timestamp lastLogin;
+public abstract class User {
+    protected int userId;
+    protected String username;
+    protected String password; // In production, this should be hashed
+    protected String email;
+    protected String firstName;
+    protected String lastName;
+    protected Role role;
+    protected boolean isActive;
+    protected Timestamp createdAt;
+    protected Timestamp lastLogin;
 
     // Constructors
     public User() {
@@ -126,6 +127,10 @@ public class User {
     public boolean isCustomer() {
         return role == Role.CUSTOMER;
     }
+
+    // Abstract methods to be implemented by subclasses
+    public abstract String getUserType();
+    public abstract boolean hasPermission(String permission);
 
     @Override
     public String toString() {
