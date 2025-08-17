@@ -76,100 +76,114 @@ public class Main {
 
 
     private static void bookManagementMenu() {
-        System.out.println("=== BOOK MANAGEMENT ===");
-        System.out.println("1. Add New Book");
-        System.out.println("2. View All Books");
-        System.out.println("3. Search Book by ID");
-        System.out.println("4. Search Book by ISBN");
-        System.out.println("5. Update Book");
-        System.out.println("6. Delete Book");
-        System.out.println("7. Update Stock");
-        System.out.println("0. Back to Main Menu");
+        while (true) {
+            System.out.println("\n=== BOOK MANAGEMENT ===");
+            System.out.println("1. Add New Book");
+            System.out.println("2. View All Books");
+            System.out.println("3. Search Book by ID");
+            System.out.println("4. Search Book by ISBN");
+            System.out.println("5. Update Book");
+            System.out.println("6. Delete Book");
+            System.out.println("7. Update Stock");
+            System.out.println("8. Refresh Book List");
+            System.out.println("0. Back to Main Menu");
 
-        int choice = getIntInput("Enter your choice: ");
+            int choice = getIntInput("Enter your choice: ");
 
-        switch (choice) {
-            case 1:
-                addNewBook();
-                break;
-            case 2:
-                viewAllBooks();
-                break;
-            case 3:
-                searchBookById();
-                break;
-            case 4:
-                searchBookByIsbn();
-                break;
-            case 5:
-                updateBook();
-                break;
-            case 6:
-                deleteBook();
-                break;
-            case 7:
-                updateBookStock();
-                break;
-            case 0:
-                return;
-            default:
-                System.out.println("Invalid choice.");
+            switch (choice) {
+                case 1:
+                    addNewBook();
+                    break;
+                case 2:
+                    viewAllBooks();
+                    break;
+                case 3:
+                    searchBookById();
+                    break;
+                case 4:
+                    searchBookByIsbn();
+                    break;
+                case 5:
+                    updateBook();
+                    break;
+                case 6:
+                    deleteBook();
+                    break;
+                case 7:
+                    updateBookStock();
+                    break;
+                case 8:
+                    // Refresh - just continue the loop
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
         }
     }
 
     private static void customerManagementMenu() {
-        System.out.println("=== CUSTOMER MANAGEMENT ===");
-        System.out.println("1. Add New Customer");
-        System.out.println("2. View All Customers");
-        System.out.println("3. Search Customer by ID");
-        System.out.println("0. Back to Main Menu");
+        while (true) {
+            System.out.println("\n=== CUSTOMER MANAGEMENT ===");
+            System.out.println("1. Add New Customer");
+            System.out.println("2. View All Customers");
+            System.out.println("3. Search Customer by ID");
+            System.out.println("4. Refresh Customer List");
+            System.out.println("0. Back to Main Menu");
 
-        int choice = getIntInput("Enter your choice: ");
+            int choice = getIntInput("Enter your choice: ");
 
-        switch (choice) {
-            case 1:
-                addNewCustomer();
-                break;
-            case 2:
-                viewAllCustomers();
-                break;
-            case 3:
-                searchCustomerById();
-                break;
-            case 0:
-                return;
-            default:
-                System.out.println("Invalid choice.");
+            switch (choice) {
+                case 1:
+                    addNewCustomer();
+                    break;
+                case 2:
+                    viewAllCustomers();
+                    break;
+                case 3:
+                    searchCustomerById();
+                    break;
+                case 4:
+                    // Refresh - just continue the loop
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
         }
     }
 
     private static void orderManagementMenu() {
-        System.out.println("=== ORDER MANAGEMENT ===");
-        System.out.println("1. Create New Order");
-        System.out.println("2. View All Orders");
-        System.out.println("3. Search Order by ID");
-        System.out.println("4. View Order Queue Status");
-        System.out.println("0. Back to Main Menu");
+        while (true) {
+            System.out.println("\n=== ORDER MANAGEMENT ===");
+            System.out.println("1. Create New Order");
+            System.out.println("2. View All Orders");
+            System.out.println("3. Search Order by ID");
+            System.out.println("4. View Order Queue Status");
+            System.out.println("0. Back to Main Menu");
 
-        int choice = getIntInput("Enter your choice: ");
+            int choice = getIntInput("Enter your choice: ");
 
-        switch (choice) {
-            case 1:
-                createNewOrder();
-                break;
-            case 2:
-                viewAllOrders();
-                break;
-            case 3:
-                searchOrderById();
-                break;
-            case 4:
-                viewOrderQueueStatus();
-                break;
-            case 0:
-                return;
-            default:
-                System.out.println("Invalid choice.");
+            switch (choice) {
+                case 1:
+                    createNewOrder();
+                    break;
+                case 2:
+                    viewAllOrders();
+                    break;
+                case 3:
+                    searchOrderById();
+                    break;
+                case 4:
+                    viewOrderQueueStatus();
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
         }
     }
 
@@ -534,50 +548,450 @@ public class Main {
     }
 
     private static void processOrderQueue() {
-        System.out.println("=== PROCESS ORDER QUEUE ===");
-        User currentUser = authService.getCurrentUser();
+        while (true) {
+            System.out.println("\n=== ORDER QUEUE MANAGEMENT ===");
+            User currentUser = authService.getCurrentUser();
 
-        if (!orderService.hasOrdersInQueue(currentUser)) {
-            System.out.println("No orders in your queue to process.");
+            // Get all orders from database
+            List<Order> allOrders = orderDAO.getAllOrders();
+
+            if (allOrders.isEmpty()) {
+                System.out.println("No orders in the system.");
+                System.out.println("\n=== QUEUE MANAGEMENT OPTIONS ===");
+                System.out.println("1. Refresh Queue");
+                System.out.println("0. Back to Main Menu");
+
+                int choice = getIntInput("Enter your choice: ");
+                if (choice == 0) {
+                    return;
+                }
+                continue;
+            }
+
+            // Show comprehensive queue status and orders table
+            showComprehensiveQueueStatus(allOrders);
+
+            System.out.println("\n=== QUEUE MANAGEMENT OPTIONS ===");
+            System.out.println("1. Process Next Pending Order");
+            System.out.println("2. View Orders by Status");
+            System.out.println("3. Update Order Status");
+            System.out.println("4. View Order Details");
+            System.out.println("5. Search Orders");
+            if (authService.isCurrentUserAdmin()) {
+                System.out.println("6. Admin Queue Management");
+            }
+            System.out.println("7. Refresh Queue");
+            System.out.println("0. Back to Main Menu");
+
+            int choice = getIntInput("Enter your choice: ");
+
+            switch (choice) {
+                case 1:
+                    processNextPendingOrder(allOrders);
+                    break;
+                case 2:
+                    viewOrdersByStatus();
+                    break;
+                case 3:
+                    updateOrderStatus();
+                    break;
+                case 4:
+                    viewOrderDetailsFromQueue();
+                    break;
+                case 5:
+                    searchOrdersInQueue();
+                    break;
+                case 6:
+                    if (authService.isCurrentUserAdmin()) {
+                        adminQueueManagement();
+                    }
+                    break;
+                case 7:
+                    // Refresh - just continue the loop
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+
+    /**
+     * Show comprehensive queue status with orders table
+     */
+    private static void showComprehensiveQueueStatus(List<Order> allOrders) {
+        // Calculate statistics
+        long pendingCount = allOrders.stream().filter(o -> o.getStatus().toString().equals("PENDING")).count();
+        long processingCount = allOrders.stream().filter(o -> o.getStatus().toString().equals("PROCESSING")).count();
+        long shippedCount = allOrders.stream().filter(o -> o.getStatus().toString().equals("SHIPPED")).count();
+        long deliveredCount = allOrders.stream().filter(o -> o.getStatus().toString().equals("DELIVERED")).count();
+        long cancelledCount = allOrders.stream().filter(o -> o.getStatus().toString().equals("CANCELLED")).count();
+
+        System.out.println("=== QUEUE STATUS OVERVIEW ===");
+        System.out.println("Total Orders: " + allOrders.size());
+        System.out.println("Pending: " + pendingCount + " | Processing: " + processingCount +
+                          " | Shipped: " + shippedCount + " | Delivered: " + deliveredCount +
+                          " | Cancelled: " + cancelledCount);
+
+        // Show all orders in a table
+        System.out.println("\n=== ALL ORDERS IN QUEUE ===");
+        if (allOrders.isEmpty()) {
+            System.out.println("No orders in the system.");
             return;
         }
 
-        // Show queue status first
-        showQueueStatus();
+        System.out.printf("%-8s %-12s %-15s %-12s %-15s %-20s%n",
+                "Order ID", "Customer ID", "Status", "Total", "Date", "Items");
+        System.out.println("=".repeat(90));
 
-        System.out.println("\n1. Process Next Order");
-        System.out.println("2. View Queue Orders");
-        System.out.println("3. Complete Order");
-        System.out.println("4. Cancel Order");
-        if (authService.isCurrentUserAdmin()) {
-            System.out.println("5. Admin Queue Management");
+        // Sort orders by status priority (PENDING first, then by date)
+        allOrders.sort((o1, o2) -> {
+            String status1 = o1.getStatus().toString();
+            String status2 = o2.getStatus().toString();
+
+            // Priority order: PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+            int priority1 = getStatusPriority(status1);
+            int priority2 = getStatusPriority(status2);
+
+            if (priority1 != priority2) {
+                return Integer.compare(priority1, priority2);
+            }
+
+            // If same status, sort by date (newest first)
+            return o2.getOrderDate().compareTo(o1.getOrderDate());
+        });
+
+        for (Order order : allOrders) {
+            int itemCount = order.getOrderItems() != null ? order.getOrderItems().size() : 0;
+            String dateStr = order.getOrderDate() != null ?
+                           order.getOrderDate().toString().substring(0, 10) : "N/A";
+
+            System.out.printf("%-8d %-12d %-15s $%-11.2f %-15s %-20d%n",
+                order.getOrderId(),
+                order.getCustomerId(),
+                order.getStatus(),
+                order.getTotalAmount(),
+                dateStr,
+                itemCount
+            );
         }
-        System.out.println("0. Back to Main Menu");
+    }
+
+    /**
+     * Get status priority for sorting (lower number = higher priority)
+     */
+    private static int getStatusPriority(String status) {
+        return switch (status) {
+            case "PENDING" -> 1;
+            case "PROCESSING" -> 2;
+            case "SHIPPED" -> 3;
+            case "DELIVERED" -> 4;
+            case "CANCELLED" -> 5;
+            default -> 6;
+        };
+    }
+
+    /**
+     * Process next pending order
+     */
+    private static void processNextPendingOrder(List<Order> allOrders) {
+        List<Order> pendingOrders = allOrders.stream()
+            .filter(o -> o.getStatus().toString().equals("PENDING"))
+            .sorted((o1, o2) -> o1.getOrderDate().compareTo(o2.getOrderDate())) // Oldest first
+            .toList();
+
+        if (pendingOrders.isEmpty()) {
+            System.out.println("No pending orders to process.");
+            return;
+        }
+
+        Order nextOrder = pendingOrders.get(0);
+        System.out.println("=== PROCESSING NEXT PENDING ORDER #" + nextOrder.getOrderId() + " ===");
+
+        // Show order details
+        displayOrderSummary(nextOrder);
+
+        System.out.println("\nWhat would you like to do with this order?");
+        System.out.println("1. Mark as Processing");
+        System.out.println("2. Mark as Shipped");
+        System.out.println("3. Cancel Order");
+        System.out.println("0. Back to Queue Menu");
 
         int choice = getIntInput("Enter your choice: ");
 
         switch (choice) {
             case 1:
-                processNextOrder();
+                updateOrderStatusInDatabase(nextOrder.getOrderId(), "PROCESSING");
+                System.out.println("Order marked as PROCESSING.");
                 break;
             case 2:
-                viewQueueOrders();
+                updateOrderStatusInDatabase(nextOrder.getOrderId(), "SHIPPED");
+                System.out.println("Order marked as SHIPPED.");
                 break;
             case 3:
-                completeOrderFromQueue();
-                break;
-            case 4:
-                cancelOrderFromQueue();
-                break;
-            case 5:
-                if (authService.isCurrentUserAdmin()) {
-                    adminQueueManagement();
-                }
+                updateOrderStatusInDatabase(nextOrder.getOrderId(), "CANCELLED");
+                System.out.println("Order cancelled.");
                 break;
             case 0:
                 return;
             default:
                 System.out.println("Invalid choice.");
+        }
+    }
+
+    /**
+     * View orders by status
+     */
+    private static void viewOrdersByStatus() {
+        while (true) {
+            System.out.println("\n=== VIEW ORDERS BY STATUS ===");
+            System.out.println("1. Pending Orders");
+            System.out.println("2. Processing Orders");
+            System.out.println("3. Shipped Orders");
+            System.out.println("4. Delivered Orders");
+            System.out.println("5. Cancelled Orders");
+            System.out.println("0. Back to Queue Menu");
+
+            int choice = getIntInput("Enter your choice: ");
+            String status = switch (choice) {
+                case 1 -> "PENDING";
+                case 2 -> "PROCESSING";
+                case 3 -> "SHIPPED";
+                case 4 -> "DELIVERED";
+                case 5 -> "CANCELLED";
+                case 0 -> null;
+                default -> null;
+            };
+
+            if (status == null) {
+                if (choice != 0) {
+                    System.out.println("Invalid choice.");
+                    continue;
+                }
+                return;
+            }
+
+            List<Order> allOrders = orderDAO.getAllOrders();
+            List<Order> filteredOrders = allOrders.stream()
+                .filter(o -> o.getStatus().toString().equals(status))
+                .sorted((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate())) // Newest first
+                .toList();
+
+            System.out.println("\n=== " + status + " ORDERS ===");
+            if (filteredOrders.isEmpty()) {
+                System.out.println("No " + status.toLowerCase() + " orders found.");
+                continue;
+            }
+
+            System.out.printf("%-8s %-12s %-12s %-15s %-20s%n",
+                    "Order ID", "Customer ID", "Total", "Date", "Items");
+            System.out.println("=".repeat(75));
+
+            for (Order order : filteredOrders) {
+                int itemCount = order.getOrderItems() != null ? order.getOrderItems().size() : 0;
+                String dateStr = order.getOrderDate() != null ?
+                               order.getOrderDate().toString().substring(0, 10) : "N/A";
+
+                System.out.printf("%-8d %-12d $%-11.2f %-15s %-20d%n",
+                    order.getOrderId(),
+                    order.getCustomerId(),
+                    order.getTotalAmount(),
+                    dateStr,
+                    itemCount
+                );
+            }
+        }
+    }
+
+    /**
+     * Search orders in queue
+     */
+    private static void searchOrdersInQueue() {
+        while (true) {
+            System.out.println("\n=== SEARCH ORDERS ===");
+            System.out.println("1. Search by Order ID");
+            System.out.println("2. Search by Customer ID");
+            System.out.println("3. Search by Date Range");
+            System.out.println("0. Back to Queue Menu");
+
+            int choice = getIntInput("Enter your choice: ");
+
+            switch (choice) {
+                case 1:
+                    searchByOrderId();
+                    break;
+                case 2:
+                    searchByCustomerId();
+                    break;
+                case 3:
+                    searchByDateRange();
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+
+    private static void searchByOrderId() {
+        int orderId = getIntInput("Enter Order ID: ");
+        Order order = orderDAO.getOrderById(orderId);
+
+        if (order == null) {
+            System.out.println("Order not found with ID: " + orderId);
+            return;
+        }
+
+        System.out.println("\n=== ORDER FOUND ===");
+        displayOrderDetails(order);
+    }
+
+    private static void searchByCustomerId() {
+        int customerId = getIntInput("Enter Customer ID: ");
+        List<Order> customerOrders = orderDAO.getOrdersByCustomerId(customerId);
+
+        if (customerOrders.isEmpty()) {
+            System.out.println("No orders found for Customer ID: " + customerId);
+            return;
+        }
+
+        System.out.println("\n=== ORDERS FOR CUSTOMER " + customerId + " ===");
+        System.out.printf("%-8s %-15s %-12s %-15s%n",
+                "Order ID", "Status", "Total", "Date");
+        System.out.println("=".repeat(60));
+
+        for (Order order : customerOrders) {
+            String dateStr = order.getOrderDate() != null ?
+                           order.getOrderDate().toString().substring(0, 10) : "N/A";
+
+            System.out.printf("%-8d %-15s $%-11.2f %-15s%n",
+                order.getOrderId(),
+                order.getStatus(),
+                order.getTotalAmount(),
+                dateStr
+            );
+        }
+    }
+
+    private static void searchByDateRange() {
+        System.out.println("Enter date range (YYYY-MM-DD format):");
+        System.out.print("Start date: ");
+        String startDate = scanner.nextLine().trim();
+        System.out.print("End date: ");
+        String endDate = scanner.nextLine().trim();
+
+        List<Order> allOrders = orderDAO.getAllOrders();
+        List<Order> dateFilteredOrders = allOrders.stream()
+            .filter(o -> {
+                if (o.getOrderDate() == null) return false;
+                String orderDateStr = o.getOrderDate().toString().substring(0, 10);
+                return orderDateStr.compareTo(startDate) >= 0 && orderDateStr.compareTo(endDate) <= 0;
+            })
+            .sorted((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate()))
+            .toList();
+
+        if (dateFilteredOrders.isEmpty()) {
+            System.out.println("No orders found in date range: " + startDate + " to " + endDate);
+            return;
+        }
+
+        System.out.println("\n=== ORDERS FROM " + startDate + " TO " + endDate + " ===");
+        System.out.printf("%-8s %-12s %-15s %-12s %-15s%n",
+                "Order ID", "Customer ID", "Status", "Total", "Date");
+        System.out.println("=".repeat(75));
+
+        for (Order order : dateFilteredOrders) {
+            String dateStr = order.getOrderDate() != null ?
+                           order.getOrderDate().toString().substring(0, 10) : "N/A";
+
+            System.out.printf("%-8d %-12d %-15s $%-11.2f %-15s%n",
+                order.getOrderId(),
+                order.getCustomerId(),
+                order.getStatus(),
+                order.getTotalAmount(),
+                dateStr
+            );
+        }
+    }
+
+    /**
+     * Update order status
+     */
+    private static void updateOrderStatus() {
+        int orderId = getIntInput("Enter Order ID to update: ");
+        Order order = orderDAO.getOrderById(orderId);
+
+        if (order == null) {
+            System.out.println("Order not found with ID: " + orderId);
+            return;
+        }
+
+        System.out.println("Current order status: " + order.getStatus());
+        System.out.println("\nSelect new status:");
+        System.out.println("1. PENDING");
+        System.out.println("2. PROCESSING");
+        System.out.println("3. SHIPPED");
+        System.out.println("4. DELIVERED");
+        System.out.println("5. CANCELLED");
+
+        int choice = getIntInput("Enter choice (1-5): ");
+        String newStatus = switch (choice) {
+            case 1 -> "PENDING";
+            case 2 -> "PROCESSING";
+            case 3 -> "SHIPPED";
+            case 4 -> "DELIVERED";
+            case 5 -> "CANCELLED";
+            default -> null;
+        };
+
+        if (newStatus != null) {
+            if (updateOrderStatusInDatabase(orderId, newStatus)) {
+                System.out.println("Order status updated to: " + newStatus);
+            } else {
+                System.out.println("Failed to update order status.");
+            }
+        } else {
+            System.out.println("Invalid choice.");
+        }
+    }
+
+    /**
+     * View order details from queue
+     */
+    private static void viewOrderDetailsFromQueue() {
+        int orderId = getIntInput("Enter Order ID to view: ");
+        Order order = orderDAO.getOrderById(orderId);
+
+        if (order == null) {
+            System.out.println("Order not found with ID: " + orderId);
+            return;
+        }
+
+        displayOrderDetails(order);
+    }
+
+    /**
+     * Update order status in database
+     */
+    private static boolean updateOrderStatusInDatabase(int orderId, String newStatus) {
+        try {
+            System.out.println("Updating order " + orderId + " status to " + newStatus + "...");
+
+            // Use OrderDAO to update the order status
+            boolean success = orderDAO.updateOrderStatus(orderId, newStatus);
+
+            if (success) {
+                System.out.println("Order status updated successfully in database.");
+            } else {
+                System.out.println("Failed to update order status in database.");
+            }
+
+            return success;
+        } catch (Exception e) {
+            System.err.println("Error updating order status: " + e.getMessage());
+            return false;
         }
     }
 
@@ -1055,60 +1469,186 @@ public class Main {
 
 
     private static void customerBrowseBooks() {
-        System.out.println("=== BROWSE BOOKS ===");
-        try {
-            List<Book> books = bookDAO.getAllBooks();
-            if (books.isEmpty()) {
-                System.out.println("No books available.");
-                return;
-            }
+        while (true) {
+            System.out.println("\n=== BROWSE BOOKS ===");
+            try {
+                List<Book> books = bookDAO.getAllBooks();
+                if (books.isEmpty()) {
+                    System.out.println("No books available.");
+                } else {
+                    System.out.printf("%-5s %-30s %-20s %-10s %-8s%n", "ID", "Title", "Author", "Price", "Stock");
+                    System.out.println("=".repeat(80));
 
-            System.out.printf("%-5s %-30s %-20s %-10s %-8s%n", "ID", "Title", "Author", "Price", "Stock");
-            System.out.println("=".repeat(80));
+                    for (Book book : books) {
+                        System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
+                                book.getBookId(),
+                                book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..." : book.getTitle(),
+                                book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..." : book.getAuthor(),
+                                book.getPrice(),
+                                book.getStockQuantity());
+                    }
+                }
 
-            for (Book book : books) {
-                System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
-                        book.getBookId(),
-                        book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..." : book.getTitle(),
-                        book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..." : book.getAuthor(),
-                        book.getPrice(),
-                        book.getStockQuantity());
+                System.out.println("\n=== BROWSE OPTIONS ===");
+                System.out.println("1. View Book Details");
+                System.out.println("2. Add Book to Cart");
+                System.out.println("3. Search Books");
+                System.out.println("4. Refresh Book List");
+                System.out.println("0. Back to Customer Menu");
+
+                int choice = getIntInput("Enter your choice: ");
+
+                switch (choice) {
+                    case 1:
+                        viewBookDetailsCustomer();
+                        break;
+                    case 2:
+                        addBookToCartFromBrowse();
+                        break;
+                    case 3:
+                        customerSearchBooks();
+                        break;
+                    case 4:
+                        // Refresh - just continue the loop
+                        break;
+                    case 0:
+                        return;
+                    default:
+                        System.out.println("Invalid choice.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error retrieving books: " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.out.println("Error retrieving books: " + e.getMessage());
+        }
+    }
+
+    /**
+     * View book details for customers
+     */
+    private static void viewBookDetailsCustomer() {
+        int bookId = getIntInput("Enter Book ID to view details: ");
+        Book book = bookDAO.getBookById(bookId);
+
+        if (book == null) {
+            System.out.println("Book not found with ID: " + bookId);
+            return;
+        }
+
+        System.out.println("\n=== BOOK DETAILS ===");
+        System.out.println("ID: " + book.getBookId());
+        System.out.println("Title: " + book.getTitle());
+        System.out.println("Author: " + book.getAuthor());
+        System.out.println("ISBN: " + book.getIsbn());
+        System.out.println("Price: $" + String.format("%.2f", book.getPrice()));
+        System.out.println("Stock: " + book.getStockQuantity());
+
+        if (book.getStockQuantity() > 0) {
+            System.out.print("\nWould you like to add this book to your cart? (y/n): ");
+            String response = scanner.nextLine().trim().toLowerCase();
+            if (response.startsWith("y")) {
+                int quantity = getIntInput("Enter quantity: ");
+                if (quantity > 0 && quantity <= book.getStockQuantity()) {
+                    // Here you would add to cart functionality
+                    System.out.println("Book added to cart! (Cart functionality to be implemented)");
+                } else {
+                    System.out.println("Invalid quantity or insufficient stock.");
+                }
+            }
+        } else {
+            System.out.println("\nThis book is currently out of stock.");
+        }
+    }
+
+    /**
+     * Add book to cart from browse view
+     */
+    private static void addBookToCartFromBrowse() {
+        int bookId = getIntInput("Enter Book ID to add to cart: ");
+        Book book = bookDAO.getBookById(bookId);
+
+        if (book == null) {
+            System.out.println("Book not found with ID: " + bookId);
+            return;
+        }
+
+        if (book.getStockQuantity() <= 0) {
+            System.out.println("Sorry, this book is out of stock.");
+            return;
+        }
+
+        System.out.println("Book: " + book.getTitle() + " by " + book.getAuthor());
+        System.out.println("Price: $" + String.format("%.2f", book.getPrice()));
+        System.out.println("Available stock: " + book.getStockQuantity());
+
+        int quantity = getIntInput("Enter quantity to add: ");
+        if (quantity > 0 && quantity <= book.getStockQuantity()) {
+            // Here you would add to cart functionality
+            System.out.println("Added " + quantity + " copies of '" + book.getTitle() + "' to cart!");
+            System.out.println("(Cart functionality to be implemented)");
+        } else {
+            System.out.println("Invalid quantity or insufficient stock.");
         }
     }
 
     private static void customerSearchBooks() {
-        System.out.println("=== SEARCH BOOKS ===");
-        System.out.print("Enter search term (title or author): ");
-        String searchTerm = scanner.nextLine().trim();
+        while (true) {
+            System.out.println("\n=== SEARCH BOOKS ===");
+            System.out.print("Enter search term (title or author) or 'exit' to return: ");
+            String searchTerm = scanner.nextLine().trim();
 
-        if (searchTerm.isEmpty()) {
-            System.out.println("Search term cannot be empty.");
-            return;
-        }
-
-        try {
-            List<Book> books = bookDAO.searchBooks(searchTerm);
-            if (books.isEmpty()) {
-                System.out.println("No books found matching: " + searchTerm);
+            if (searchTerm.equalsIgnoreCase("exit")) {
                 return;
             }
 
-            System.out.printf("%-5s %-30s %-20s %-10s %-8s%n", "ID", "Title", "Author", "Price", "Stock");
-            System.out.println("=".repeat(80));
-
-            for (Book book : books) {
-                System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
-                        book.getBookId(),
-                        book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..." : book.getTitle(),
-                        book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..." : book.getAuthor(),
-                        book.getPrice(),
-                        book.getStockQuantity());
+            if (searchTerm.isEmpty()) {
+                System.out.println("Search term cannot be empty.");
+                continue;
             }
-        } catch (Exception e) {
-            System.out.println("Error searching books: " + e.getMessage());
+
+            try {
+                List<Book> books = bookDAO.searchBooks(searchTerm);
+                if (books.isEmpty()) {
+                    System.out.println("No books found matching: " + searchTerm);
+                } else {
+                    System.out.printf("%-5s %-30s %-20s %-10s %-8s%n", "ID", "Title", "Author", "Price", "Stock");
+                    System.out.println("=".repeat(80));
+
+                    for (Book book : books) {
+                        System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
+                                book.getBookId(),
+                                book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..." : book.getTitle(),
+                                book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..." : book.getAuthor(),
+                                book.getPrice(),
+                                book.getStockQuantity());
+                    }
+
+                    System.out.println("\n=== SEARCH OPTIONS ===");
+                    System.out.println("1. View Book Details");
+                    System.out.println("2. Add Book to Cart");
+                    System.out.println("3. New Search");
+                    System.out.println("0. Back to Customer Menu");
+
+                    int choice = getIntInput("Enter your choice: ");
+
+                    switch (choice) {
+                        case 1:
+                            viewBookDetailsCustomer();
+                            break;
+                        case 2:
+                            addBookToCartFromBrowse();
+                            break;
+                        case 3:
+                            // Continue to new search
+                            break;
+                        case 0:
+                            return;
+                        default:
+                            System.out.println("Invalid choice.");
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("Error searching books: " + e.getMessage());
+            }
         }
     }
 
