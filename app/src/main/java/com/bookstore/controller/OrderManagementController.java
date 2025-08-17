@@ -12,6 +12,7 @@ import com.bookstore.service.AuthService;
 import com.bookstore.service.OrderService;
 import com.bookstore.util.ui.DisplayFormatter;
 import com.bookstore.util.ui.InputValidator;
+import com.bookstore.util.ui.PaginationUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,7 @@ public class OrderManagementController {
             System.out.println("1. Create New Order");
             System.out.println("2. View All Orders");
             System.out.println("3. Search Order by ID");
-            System.out.println("4. View Order Queue Status");
+            // System.out.println("4. View Order Queue Status");
             System.out.println("0. Back to Main Menu");
 
             int choice = InputValidator.getIntInput("Enter your choice: ");
@@ -60,9 +61,9 @@ public class OrderManagementController {
                 case 3:
                     searchOrderById();
                     break;
-                case 4:
-                    viewOrderQueueStatus();
-                    break;
+                // case 4:
+                //     viewOrderQueueStatus();
+                //     break;
                 case 0:
                     return;
                 default:
@@ -210,30 +211,47 @@ public class OrderManagementController {
     }
 
     /**
-     * Show customer browse books interface
+     * Show customer browse books interface with pagination
      */
     public void showCustomerBrowseBooks() {
+        int currentPage = 1;
+        final int PAGE_SIZE = 10;
+
         while (true) {
             System.out.println("\n=== BROWSE BOOKS ===");
             try {
-                List<Book> books = bookDAO.getAllBooks();
-                if (books.isEmpty()) {
+                List<Book> allBooks = bookDAO.getAllBooks();
+                if (allBooks.isEmpty()) {
                     System.out.println("No books available.");
-                } else {
-                    System.out.printf("%-5s %-30s %-20s %-10s %-8s%n", "ID", "Title", "Author", "Price", "Stock");
-                    System.out.println("=".repeat(80));
-
-                    for (Book book : books) {
-                        System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
-                                book.getBookId(),
-                                book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..."
-                                        : book.getTitle(),
-                                book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..."
-                                        : book.getAuthor(),
-                                book.getPrice(),
-                                book.getStockQuantity());
-                    }
+                    System.out.println("\nPress Enter to continue...");
+                    InputValidator.getStringInput("");
+                    return;
                 }
+
+                int totalPages = PaginationUtil.getTotalPages(allBooks.size(), PAGE_SIZE);
+                currentPage = PaginationUtil.validatePageNumber(currentPage, totalPages);
+                List<Book> pageBooks = PaginationUtil.getPage(allBooks, currentPage, PAGE_SIZE);
+
+                // Display pagination info
+                PaginationUtil.displayPaginationInfo(currentPage, totalPages, allBooks.size(), PAGE_SIZE);
+
+                // Display books table
+                System.out.printf("%-5s %-30s %-20s %-10s %-8s%n", "ID", "Title", "Author", "Price", "Stock");
+                System.out.println("=".repeat(80));
+
+                for (Book book : pageBooks) {
+                    System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
+                            book.getBookId(),
+                            book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..."
+                                    : book.getTitle(),
+                            book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..."
+                                    : book.getAuthor(),
+                            book.getPrice(),
+                            book.getStockQuantity());
+                }
+
+                // Display navigation options
+                PaginationUtil.displayPaginationNavigation(currentPage, totalPages);
 
                 System.out.println("\n=== BROWSE OPTIONS ===");
                 System.out.println("1. View Book Details");
@@ -243,28 +261,45 @@ public class OrderManagementController {
                 System.out.println("5. Refresh Book List");
                 System.out.println("0. Back to Customer Menu");
 
-                int choice = InputValidator.getIntInput("Enter your choice: ");
+                String input = InputValidator.getStringInput("Enter your choice (or navigation command): ");
 
-                switch (choice) {
-                    case 1:
-                        viewBookDetailsCustomer();
-                        break;
-                    case 2:
-                        addBookToCartFromBrowse();
-                        break;
-                    case 3:
-                        showCustomerSearchBooks();
-                        break;
-                    case 4:
-                        showCartManagement();
-                        break;
-                    case 5:
-                        // Refresh - just continue the loop
-                        break;
-                    case 0:
-                        return;
-                    default:
-                        System.out.println("Invalid choice.");
+                // Handle pagination navigation first
+                int newPage = PaginationUtil.handleNavigationInput(input, currentPage, totalPages);
+                if (newPage > 0) {
+                    currentPage = newPage;
+                    continue;
+                } else if (newPage == -2) { // Go to page
+                    int targetPage = InputValidator.getIntInput("Enter page number (1-" + totalPages + "): ");
+                    currentPage = PaginationUtil.validatePageNumber(targetPage, totalPages);
+                    continue;
+                }
+
+                // Handle menu options
+                try {
+                    int choice = Integer.parseInt(input);
+                    switch (choice) {
+                        case 1:
+                            viewBookDetailsCustomer();
+                            break;
+                        case 2:
+                            addBookToCartFromBrowse();
+                            break;
+                        case 3:
+                            showCustomerSearchBooks();
+                            break;
+                        case 4:
+                            showCartManagement();
+                            break;
+                        case 5:
+                            currentPage = 1; // Reset to first page on refresh
+                            break;
+                        case 0:
+                            return;
+                        default:
+                            System.out.println("Invalid choice.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input. Please enter a number or navigation command.");
                 }
             } catch (Exception e) {
                 System.out.println("Error retrieving books: " + e.getMessage());
@@ -488,7 +523,7 @@ public class OrderManagementController {
     }
 
     /**
-     * Show customer search books interface
+     * Show customer search books interface with pagination
      */
     public void showCustomerSearchBooks() {
         while (true) {
@@ -506,54 +541,98 @@ public class OrderManagementController {
             }
 
             try {
-                List<Book> books = bookDAO.searchBooks(searchTerm);
-                if (books.isEmpty()) {
+                List<Book> searchResults = bookDAO.searchBooks(searchTerm);
+                if (searchResults.isEmpty()) {
                     System.out.println("No books found matching: " + searchTerm);
-                } else {
-                    System.out.printf("%-5s %-30s %-20s %-10s %-8s%n", "ID", "Title", "Author", "Price", "Stock");
-                    System.out.println("=".repeat(80));
-
-                    for (Book book : books) {
-                        System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
-                                book.getBookId(),
-                                book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..."
-                                        : book.getTitle(),
-                                book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..."
-                                        : book.getAuthor(),
-                                book.getPrice(),
-                                book.getStockQuantity());
-                    }
-
-                    System.out.println("\n=== SEARCH OPTIONS ===");
-                    System.out.println("1. View Book Details");
-                    System.out.println("2. Add Book to Cart");
-                    System.out.println("3. View Cart (" + authService.getCartService().getItemCount() + " items)");
-                    System.out.println("4. New Search");
-                    System.out.println("0. Back to Customer Menu");
-
-                    int choice = InputValidator.getIntInput("Enter your choice: ");
-
-                    switch (choice) {
-                        case 1:
-                            viewBookDetailsCustomer();
-                            break;
-                        case 2:
-                            addBookToCartFromBrowse();
-                            break;
-                        case 3:
-                            showCartManagement();
-                            break;
-                        case 4:
-                            // Continue to new search
-                            break;
-                        case 0:
-                            return;
-                        default:
-                            System.out.println("Invalid choice.");
-                    }
+                    continue;
                 }
+
+                // Handle pagination for search results
+                showPaginatedSearchResults(searchResults, searchTerm);
+
             } catch (Exception e) {
                 System.out.println("Error searching books: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Display paginated search results
+     */
+    private void showPaginatedSearchResults(List<Book> searchResults, String searchTerm) {
+        int currentPage = 1;
+        final int PAGE_SIZE = 10;
+
+        while (true) {
+            System.out.println("\n=== SEARCH RESULTS FOR: \"" + searchTerm + "\" ===");
+
+            int totalPages = PaginationUtil.getTotalPages(searchResults.size(), PAGE_SIZE);
+            currentPage = PaginationUtil.validatePageNumber(currentPage, totalPages);
+            List<Book> pageBooks = PaginationUtil.getPage(searchResults, currentPage, PAGE_SIZE);
+
+            // Display pagination info
+            PaginationUtil.displayPaginationInfo(currentPage, totalPages, searchResults.size(), PAGE_SIZE);
+
+            // Display books table
+            System.out.printf("%-5s %-30s %-20s %-10s %-8s%n", "ID", "Title", "Author", "Price", "Stock");
+            System.out.println("=".repeat(80));
+
+            for (Book book : pageBooks) {
+                System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
+                        book.getBookId(),
+                        book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..."
+                                : book.getTitle(),
+                        book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..."
+                                : book.getAuthor(),
+                        book.getPrice(),
+                        book.getStockQuantity());
+            }
+
+            // Display navigation options
+            PaginationUtil.displayPaginationNavigation(currentPage, totalPages);
+
+            System.out.println("\n=== SEARCH OPTIONS ===");
+            System.out.println("1. View Book Details");
+            System.out.println("2. Add Book to Cart");
+            System.out.println("3. View Cart (" + authService.getCartService().getItemCount() + " items)");
+            System.out.println("4. New Search");
+            System.out.println("0. Back to Customer Menu");
+
+            String input = InputValidator.getStringInput("Enter your choice (or navigation command): ");
+
+            // Handle pagination navigation first
+            int newPage = PaginationUtil.handleNavigationInput(input, currentPage, totalPages);
+            if (newPage > 0) {
+                currentPage = newPage;
+                continue;
+            } else if (newPage == -2) { // Go to page
+                int targetPage = InputValidator.getIntInput("Enter page number (1-" + totalPages + "): ");
+                currentPage = PaginationUtil.validatePageNumber(targetPage, totalPages);
+                continue;
+            }
+
+            // Handle menu options
+            try {
+                int choice = Integer.parseInt(input);
+                switch (choice) {
+                    case 1:
+                        viewBookDetailsCustomer();
+                        break;
+                    case 2:
+                        addBookToCartFromBrowse();
+                        break;
+                    case 3:
+                        showCartManagement();
+                        break;
+                    case 4:
+                        return; // Return to search input
+                    case 0:
+                        return; // Return to customer menu
+                    default:
+                        System.out.println("Invalid choice.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number or navigation command.");
             }
         }
     }
@@ -831,9 +910,9 @@ public class OrderManagementController {
             System.out.println("3. Update Order Status");
             System.out.println("4. View Order Details");
             System.out.println("5. Search Orders");
-            if (authService.isCurrentUserAdmin()) {
-                System.out.println("6. Admin Queue Management");
-            }
+            // if (authService.isCurrentUserAdmin()) {
+            //     System.out.println("6. Admin Queue Management");
+            // }
             System.out.println("7. Refresh Queue");
             System.out.println("0. Back to Main Menu");
 
@@ -855,11 +934,11 @@ public class OrderManagementController {
                 case 5:
                     searchOrdersInQueue();
                     break;
-                case 6:
-                    if (authService.isCurrentUserAdmin()) {
-                        adminQueueManagement();
-                    }
-                    break;
+                // case 6:
+                //     if (authService.isCurrentUserAdmin()) {
+                //         adminQueueManagement();
+                //     }
+                //     break;
                 case 7:
                     // Refresh - just continue the loop
                     break;

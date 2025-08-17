@@ -4,6 +4,7 @@ import com.bookstore.dao.BookDAO;
 import com.bookstore.model.Book;
 import com.bookstore.util.ui.DisplayFormatter;
 import com.bookstore.util.ui.InputValidator;
+import com.bookstore.util.ui.PaginationUtil;
 import com.bookstore.util.algorithms.SortingAlgorithms;
 
 import java.util.List;
@@ -92,12 +93,79 @@ public class BookManagementController {
     }
 
     /**
-     * View all books in the system
+     * View all books in the system with pagination
      */
     public void viewAllBooks() {
-        System.out.println("=== ALL BOOKS ===");
-        List<Book> books = bookDAO.getAllBooks();
-        DisplayFormatter.displayBooksTable(books);
+        int currentPage = 1;
+        final int PAGE_SIZE = 10;
+
+        while (true) {
+            System.out.println("\n=== ALL BOOKS ===");
+            try {
+                List<Book> allBooks = bookDAO.getAllBooks();
+                if (allBooks.isEmpty()) {
+                    System.out.println("No books available.");
+                    System.out.println("\nPress Enter to continue...");
+                    InputValidator.getStringInput("");
+                    return;
+                }
+
+                int totalPages = PaginationUtil.getTotalPages(allBooks.size(), PAGE_SIZE);
+                currentPage = PaginationUtil.validatePageNumber(currentPage, totalPages);
+                List<Book> pageBooks = PaginationUtil.getPage(allBooks, currentPage, PAGE_SIZE);
+
+                // Display pagination info
+                PaginationUtil.displayPaginationInfo(currentPage, totalPages, allBooks.size(), PAGE_SIZE);
+
+                // Display books table
+                System.out.printf("%-5s %-30s %-20s %-15s %-10s %-8s%n",
+                        "ID", "Title", "Author", "ISBN", "Price", "Stock");
+                System.out.println("=".repeat(90));
+
+                for (Book book : pageBooks) {
+                    System.out.printf("%-5d %-30s %-20s %-15s $%-9.2f %-8d%n",
+                            book.getBookId(),
+                            InputValidator.truncate(book.getTitle(), 30),
+                            InputValidator.truncate(book.getAuthor(), 20),
+                            book.getIsbn(),
+                            book.getPrice(),
+                            book.getStockQuantity());
+                }
+
+                // Display navigation options
+                PaginationUtil.displayPaginationNavigation(currentPage, totalPages);
+
+                System.out.println("\n=== OPTIONS ===");
+                System.out.println("0. Back to Book Management Menu");
+
+                String input = InputValidator.getStringInput("Enter your choice (or navigation command): ");
+
+                // Handle pagination navigation first
+                int newPage = PaginationUtil.handleNavigationInput(input, currentPage, totalPages);
+                if (newPage > 0) {
+                    currentPage = newPage;
+                    continue;
+                } else if (newPage == -2) { // Go to page
+                    int targetPage = InputValidator.getIntInput("Enter page number (1-" + totalPages + "): ");
+                    currentPage = PaginationUtil.validatePageNumber(targetPage, totalPages);
+                    continue;
+                }
+
+                // Handle menu options
+                try {
+                    int choice = Integer.parseInt(input);
+                    if (choice == 0) {
+                        return;
+                    } else {
+                        System.out.println("Invalid choice.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input. Please enter a number or navigation command.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error retrieving books: " + e.getMessage());
+            }
+        }
     }
 
     /**
