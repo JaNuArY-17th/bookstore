@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout}">
+<head>
+    <title th:text="${pageTitle}">User Dashboard</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- Welcome Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="jumbotron bg-primary text-white p-4 rounded">
+                    <h1 class="display-6">
+                        <i class="bi bi-person-circle"></i> 
+                        Welcome back, <span th:text="${user.firstName}">User</span>!
+                    </h1>
+                    <p class="lead">Manage your orders and explore our book collection</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center card-hover bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">📦 My Orders</h5>
+                        <h2 class="card-text" th:text="${#lists.size(userOrders)}">0</h2>
+                        <a th:href="@{/user/orders}" class="btn btn-outline-primary btn-sm">View All</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center card-hover bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">⏳ In Queue</h5>
+                        <h2 class="card-text" th:text="${userQueueSize}">0</h2>
+                        <a th:href="@{/user/queue}" class="btn btn-outline-warning btn-sm">View Queue</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center card-hover bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">📚 Available Books</h5>
+                        <h2 class="card-text" th:text="${#lists.size(availableBooks)}">0</h2>
+                        <a th:href="@{/books}" class="btn btn-outline-success btn-sm">Browse</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center card-hover bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-info">👤 Profile</h5>
+                        <p class="card-text small" th:text="${user.email}">email</p>
+                        <a th:href="@{/user/profile}" class="btn btn-outline-info btn-sm">Edit Profile</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history"></i> Recent Orders
+                        </h5>
+                        <a th:href="@{/user/orders}" class="btn btn-outline-primary btn-sm">View All Orders</a>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${userOrders != null and !userOrders.empty}">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Total</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="order : ${userOrders}" th:if="${orderStat.index < 5}">
+                                            <td>
+                                                <strong>#<span th:text="${order.orderId}">1</span></strong>
+                                            </td>
+                                            <td th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy')}">Date</td>
+                                            <td>
+                                                <span class="badge" 
+                                                      th:classappend="${order.status.name() == 'COMPLETED'} ? 'bg-success' : 
+                                                                     (${order.status.name() == 'PENDING'} ? 'bg-warning' : 
+                                                                     (${order.status.name() == 'PROCESSING'} ? 'bg-info' : 'bg-secondary'))"
+                                                      th:text="${order.status}">Status</span>
+                                            </td>
+                                            <td>$<span th:text="${#numbers.formatDecimal(order.totalAmount, 1, 2)}">0.00</span></td>
+                                            <td>
+                                                <a th:href="@{/user/orders/{id}(id=${order.orderId})}" 
+                                                   class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div th:if="${userOrders == null or userOrders.empty}" class="text-center py-4">
+                            <i class="bi bi-inbox display-4 text-muted"></i>
+                            <h5 class="mt-3">No orders yet</h5>
+                            <p class="text-muted">Start by creating your first order!</p>
+                            <a th:href="@{/orders/create}" class="btn btn-primary">
+                                <i class="bi bi-cart-plus"></i> Create Order
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Books Preview -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-book"></i> Featured Books
+                        </h5>
+                        <a th:href="@{/books}" class="btn btn-outline-primary btn-sm">Browse All Books</a>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${availableBooks != null and !availableBooks.empty}">
+                            <div class="row">
+                                <div class="col-md-4 mb-3" th:each="book : ${availableBooks}" th:if="${bookStat.index < 3}">
+                                    <div class="card h-100 card-hover">
+                                        <div class="card-body">
+                                            <h6 class="card-title" th:text="${book.title}">Book Title</h6>
+                                            <p class="card-text small">
+                                                <strong>Author:</strong> <span th:text="${book.author}">Author</span><br>
+                                                <strong>Price:</strong> $<span th:text="${#numbers.formatDecimal(book.price, 1, 2)}">0.00</span>
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge" 
+                                                      th:classappend="${book.stockQuantity > 5} ? 'bg-success' : (${book.stockQuantity > 0} ? 'bg-warning' : 'bg-danger')"
+                                                      th:text="${book.stockQuantity > 0} ? ('Stock: ' + ${book.stockQuantity}) : 'Out of Stock'">
+                                                    Stock: 0
+                                                </span>
+                                                <a th:href="@{/books/{id}(id=${book.bookId})}" 
+                                                   class="btn btn-outline-primary btn-sm">View</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${availableBooks == null or availableBooks.empty}" class="text-center py-4">
+                            <i class="bi bi-book display-4 text-muted"></i>
+                            <h5 class="mt-3">No books available</h5>
+                            <p class="text-muted">Check back later for new arrivals!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-lightning"></i> Quick Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                            <a th:href="@{/orders/create}" class="btn btn-primary me-md-2">
+                                <i class="bi bi-cart-plus"></i> Create New Order
+                            </a>
+                            <a th:href="@{/books}" class="btn btn-outline-primary me-md-2">
+                                <i class="bi bi-search"></i> Browse Books
+                            </a>
+                            <a th:href="@{/user/orders}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-list-ul"></i> View Order History
+                            </a>
+                            <a th:href="@{/user/profile}" class="btn btn-outline-info">
+                                <i class="bi bi-person-gear"></i> Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

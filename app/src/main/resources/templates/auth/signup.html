@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout}">
+<head>
+    <title>Sign Up - Bookstore</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white text-center">
+                        <h3 class="mb-0">
+                            <i class="bi bi-person-plus"></i> Create Account
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Signup Form -->
+                        <form id="signupForm" th:action="@{/auth/signup}" method="post" th:object="${signupRequest}">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="firstName" class="form-label">First Name *</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="firstName" 
+                                               th:field="*{firstName}"
+                                               required 
+                                               placeholder="Enter your first name">
+                                        <div th:if="${#fields.hasErrors('firstName')}" 
+                                             class="text-danger small" 
+                                             th:errors="*{firstName}"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="lastName" class="form-label">Last Name *</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="lastName" 
+                                               th:field="*{lastName}"
+                                               required 
+                                               placeholder="Enter your last name">
+                                        <div th:if="${#fields.hasErrors('lastName')}" 
+                                             class="text-danger small" 
+                                             th:errors="*{lastName}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username *</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="username" 
+                                       th:field="*{username}"
+                                       required 
+                                       placeholder="Choose a username">
+                                <div class="form-text">Username must be 3-20 characters long</div>
+                                <div th:if="${#fields.hasErrors('username')}" 
+                                     class="text-danger small" 
+                                     th:errors="*{username}"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="email" 
+                                       th:field="*{email}"
+                                       required 
+                                       placeholder="Enter your email address">
+                                <div th:if="${#fields.hasErrors('email')}" 
+                                     class="text-danger small" 
+                                     th:errors="*{email}"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       th:field="*{password}"
+                                       required 
+                                       placeholder="Create a password">
+                                <div class="form-text">Password must be at least 8 characters long</div>
+                                <div th:if="${#fields.hasErrors('password')}" 
+                                     class="text-danger small" 
+                                     th:errors="*{password}"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="confirmPassword" 
+                                       name="confirmPassword"
+                                       required 
+                                       placeholder="Confirm your password">
+                                <div id="passwordMismatch" class="text-danger small" style="display: none;">
+                                    Passwords do not match
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" 
+                                       class="form-check-input" 
+                                       id="agreeTerms" 
+                                       required>
+                                <label class="form-check-label" for="agreeTerms">
+                                    I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> 
+                                    and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-person-check"></i> Create Account
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <hr>
+                        
+                        <div class="text-center">
+                            <p class="mb-0">Already have an account?</p>
+                            <a th:href="@{/auth/login}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript for signup validation -->
+    <script>
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            const mismatchDiv = document.getElementById('passwordMismatch');
+            
+            if (confirmPassword && password !== confirmPassword) {
+                mismatchDiv.style.display = 'block';
+                this.classList.add('is-invalid');
+            } else {
+                mismatchDiv.style.display = 'none';
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                document.getElementById('passwordMismatch').style.display = 'block';
+                document.getElementById('confirmPassword').classList.add('is-invalid');
+            }
+        });
+    </script>
+</body>
+</html>

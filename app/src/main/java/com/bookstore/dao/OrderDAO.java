@@ -150,4 +150,71 @@ public class OrderDAO {
         }
         return orders;
     }
+
+    /**
+     * Get orders by customer ID
+     * @param customerId The customer ID
+     * @return List of orders for the customer
+     */
+    public List<Order> getOrdersByCustomerId(int customerId) {
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT order_id FROM Orders WHERE customer_id = ? ORDER BY order_date DESC";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, customerId);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    orders.add(getOrderById(rs.getInt("order_id")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting orders by customer ID: " + e.getMessage());
+        }
+        return orders;
+    }
+
+    /**
+     * Get order items by order ID
+     * @param orderId The order ID
+     * @return List of order items for the order
+     */
+    public List<OrderItem> getOrderItemsByOrderId(int orderId) {
+        List<OrderItem> orderItems = new ArrayList<>();
+        String sql = "SELECT oi.*, b.title, b.author, b.isbn, b.price " +
+                    "FROM OrderItems oi JOIN Books b ON oi.book_id = b.book_id WHERE oi.order_id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, orderId);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    OrderItem item = new OrderItem();
+                    item.setOrderItemId(rs.getInt("order_item_id"));
+                    item.setOrderId(rs.getInt("order_id"));
+                    item.setBookId(rs.getInt("book_id"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setUnitPrice(rs.getDouble("unit_price"));
+
+                    // Assign book information to OrderItem
+                    Book book = new Book();
+                    book.setBookId(rs.getInt("book_id"));
+                    book.setTitle(rs.getString("title"));
+                    book.setAuthor(rs.getString("author"));
+                    book.setIsbn(rs.getString("isbn"));
+                    book.setPrice(rs.getDouble("price"));
+                    item.setBook(book);
+
+                    orderItems.add(item);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting order items by order ID: " + e.getMessage());
+        }
+        return orderItems;
+    }
 }

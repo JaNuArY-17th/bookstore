@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout}">
+<head>
+    <title th:text="${pageTitle}">My Profile</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2>
+                    <i class="bi bi-person-circle"></i> My Profile
+                </h2>
+            </div>
+        </div>
+
+        <!-- Profile Information -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person"></i> Personal Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="profileForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="firstName" class="form-label">First Name</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="firstName" 
+                                               th:value="${user.firstName}"
+                                               readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="lastName" class="form-label">Last Name</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="lastName" 
+                                               th:value="${user.lastName}"
+                                               readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="username" 
+                                       th:value="${user.username}"
+                                       readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="email" 
+                                       th:value="${user.email}"
+                                       readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Account Type</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="role" 
+                                       th:value="${user.role}"
+                                       readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="createdAt" class="form-label">Member Since</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="createdAt" 
+                                       th:value="${#temporals.format(user.createdAt, 'MMMM dd, yyyy')}"
+                                       readonly>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Note:</strong> Profile editing is currently not available. 
+                                Contact support if you need to update your information.
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Actions -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-gear"></i> Account Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/user/orders}" class="btn btn-outline-primary">
+                                <i class="bi bi-bag"></i> View My Orders
+                            </a>
+                            <a th:href="@{/user/queue}" class="btn btn-outline-warning">
+                                <i class="bi bi-list-task"></i> View My Queue
+                            </a>
+                            <a th:href="@{/books}" class="btn btn-outline-success">
+                                <i class="bi bi-book"></i> Browse Books
+                            </a>
+                            <hr>
+                            <button type="button" class="btn btn-outline-secondary" disabled>
+                                <i class="bi bi-pencil"></i> Edit Profile (Coming Soon)
+                            </button>
+                            <button type="button" class="btn btn-outline-warning" disabled>
+                                <i class="bi bi-key"></i> Change Password (Coming Soon)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Account Status -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-shield-check"></i> Account Status
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2">Active</span>
+                            <small class="text-muted">Account is in good standing</small>
+                        </div>
+                        <hr>
+                        <small class="text-muted">
+                            <strong>Last Login:</strong> Today<br>
+                            <strong>Account ID:</strong> <span th:text="${user.userId}">123</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Dashboard -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <a th:href="@{/user/dashboard}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
