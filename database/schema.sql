@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS Users (
     email VARCHAR(100) UNIQUE NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
-    role ENUM('ADMIN', 'USER') NOT NULL DEFAULT 'USER',
+    role ENUM('ADMIN', 'CUSTOMER') NOT NULL DEFAULT 'CUSTOMER',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL,
@@ -409,9 +409,9 @@ DELIMITER ;
 -- SAMPLE DATA INSERTION
 -- =====================================================
 
--- Insert default admin user (password will be hashed by application)
+-- Insert default admin user (password is hashed: password@123)
 INSERT IGNORE INTO Users (username, password, email, first_name, last_name, role) 
-VALUES ('admin', 'temp_password', 'admin@bookstore.com', 'System', 'Administrator', 'ADMIN');
+VALUES ('admin', 'TRukV3lw+q2bWDcz23H19sT2/d7baPuO3eYor1UVa4M9f7lt5/D8nn356PaogG30', 'admin@bookstore.com', 'System', 'Administrator', 'ADMIN');
 
 -- Insert sample books
 INSERT IGNORE INTO Books (title, author, isbn, price, stock_quantity, description, category) VALUES

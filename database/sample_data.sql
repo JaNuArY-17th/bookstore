@@ -88,8 +88,8 @@ INSERT IGNORE INTO OrderItems (order_id, book_id, quantity, unit_price) VALUES
 -- =====================================================
 INSERT IGNORE INTO Users (username, password, email, first_name, last_name, role) VALUES
 ('manager1', 'temp_password', 'manager1@bookstore.com', 'John', 'Manager', 'ADMIN'),
-('staff1', 'temp_password', 'staff1@bookstore.com', 'Alice', 'Staff', 'USER'),
-('staff2', 'temp_password', 'staff2@bookstore.com', 'Bob', 'Staff', 'USER');
+('customer1', 'temp_password', 'customer1@bookstore.com', 'Alice', 'Customer', 'CUSTOMER'),
+('customer2', 'temp_password', 'customer2@bookstore.com', 'Bob', 'Customer', 'CUSTOMER');
 
 -- =====================================================
 -- Sample Inventory Transactions

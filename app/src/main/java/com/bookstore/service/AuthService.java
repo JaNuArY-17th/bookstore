@@ -66,9 +66,43 @@ public class AuthService {
     }
 
     /**
-     * Register a new user (admin only)
+     * Register a new customer (admin only)
      */
-    public boolean registerUser(String username, String password, String email, 
+    public boolean registerCustomer(String username, String password, String email, 
+                                   String firstName, String lastName) {
+        if (!hasAdminPermission()) {
+            System.err.println("Access denied: Admin permission required to register customers.");
+            return false;
+        }
+
+        String hashedPassword = PasswordUtil.hashPassword(password);
+        User newCustomer = new User(username, hashedPassword, email, firstName, lastName, Role.CUSTOMER);
+        
+        int userId = userDAO.addUser(newCustomer);
+        return userId != -1;
+    }
+
+    /**
+     * Register a new admin (admin only)
+     */
+    public boolean registerAdmin(String username, String password, String email,
+                                String firstName, String lastName) {
+        if (!hasAdminPermission()) {
+            System.err.println("Access denied: Admin permission required to register admins.");
+            return false;
+        }
+
+        String hashedPassword = PasswordUtil.hashPassword(password);
+        User newAdmin = new User(username, hashedPassword, email, firstName, lastName, Role.ADMIN);
+
+        int userId = userDAO.addUser(newAdmin);
+        return userId != -1;
+    }
+
+    /**
+     * Register a new user with specified role (admin only)
+     */
+    public boolean registerUser(String username, String password, String email,
                                String firstName, String lastName, Role role) {
         if (!hasAdminPermission()) {
             System.err.println("Access denied: Admin permission required to register users.");
@@ -77,7 +111,7 @@ public class AuthService {
 
         String hashedPassword = PasswordUtil.hashPassword(password);
         User newUser = new User(username, hashedPassword, email, firstName, lastName, role);
-        
+
         int userId = userDAO.addUser(newUser);
         return userId != -1;
     }
@@ -110,20 +144,8 @@ public class AuthService {
      * Create default admin user if none exists
      */
     public void createDefaultAdminIfNeeded() {
-        User existingAdmin = userDAO.getUserByUsername("admin");
-        if (existingAdmin == null) {
-            String hashedPassword = PasswordUtil.hashPassword("admin123");
-            User adminUser = new User("admin", hashedPassword, "admin@bookstore.com", 
-                                    "System", "Administrator", Role.ADMIN);
-            
-            int userId = userDAO.addUser(adminUser);
-            if (userId != -1) {
-                System.out.println("Default admin user created:");
-                System.out.println("Username: admin");
-                System.out.println("Password: admin123");
-                System.out.println("Please change the password after first login.");
-            }
-        }
+        // Admin users are managed through database setup
+        // No automatic admin creation needed
     }
 
     /**

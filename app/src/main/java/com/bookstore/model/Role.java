@@ -5,7 +5,7 @@ package com.bookstore.model;
  */
 public enum Role {
     ADMIN("Administrator", "Full system access"),
-    USER("User", "Limited access to user functions");
+    CUSTOMER("Customer", "Customer access to place orders and view books");
 
     private final String displayName;
     private final String description;

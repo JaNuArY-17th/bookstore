@@ -123,8 +123,8 @@ public class User {
         return role == Role.ADMIN;
     }
 
-    public boolean isUser() {
-        return role == Role.USER;
+    public boolean isCustomer() {
+        return role == Role.CUSTOMER;
     }
 
     @Override
