@@ -4,7 +4,7 @@ import com.bookstore.model.User;
 import com.bookstore.model.Admin;
 import com.bookstore.model.Customer;
 import com.bookstore.model.Role;
-import com.bookstore.util.DBConnection;
+import com.bookstore.util.database.DBConnection;
 
 import java.sql.*;
 import java.util.ArrayList;

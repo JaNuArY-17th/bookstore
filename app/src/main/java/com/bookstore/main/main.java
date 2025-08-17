@@ -11,8 +11,8 @@ import com.bookstore.dao.OrderDAO;
 import com.bookstore.dao.UserDAO;
 import com.bookstore.service.AuthService;
 import com.bookstore.service.OrderService;
-import com.bookstore.util.DatabaseInitializer;
-import com.bookstore.util.DatabaseTestUtil;
+import com.bookstore.util.database.DatabaseInitializer;
+import com.bookstore.util.database.DatabaseTestUtil;
 
 /**
  * Console-based Bookstore Management System
@@ -57,13 +57,12 @@ public class Main {
             if (!authService.isLoggedIn()) {
                 if (!menuManager.showLoginMenu()) {
                     running = false;
-                    continue;
                 }
-            }
-
-            // Direct to appropriate menu based on role
-            if (!menuManager.showMainMenu()) {
-                running = false;
+            } else {
+                // Only show main menu if user is logged in
+                if (!menuManager.showMainMenu()) {
+                    running = false;
+                }
             }
             System.out.println();
         }
@@ -92,7 +91,7 @@ public class Main {
             DatabaseInitializer.initializeDatabase();
             
             // Test database connection
-            if (DatabaseTestUtil.testConnection()) {
+            if (DatabaseTestUtil.testDatabaseConnection()) {
                 System.out.println("Database connection successful!");
             } else {
                 System.err.println("Database connection failed!");
@@ -100,9 +99,9 @@ public class Main {
             }
 
             // Create default admin if it doesn't exist
-            if (authService.getUserDAO().getUserByUsername("admin") == null) {
+            if (authService.getUserDAOForInitialization().getUserByUsername("admin") == null) {
                 System.out.println("Creating default admin account...");
-                if (authService.registerAdmin("admin", "admin123", "admin@bookstore.com", "System", "Administrator")) {
+                if (authService.registerAdminForInitialization("admin", "admin123", "admin@bookstore.com", "System", "Administrator")) {
                     System.out.println("Default admin account created successfully!");
                     System.out.println("Username: admin");
                     System.out.println("Password: admin123");

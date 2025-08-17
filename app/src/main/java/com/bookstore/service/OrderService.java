@@ -7,7 +7,7 @@ import com.bookstore.model.OrderItem;
 import com.bookstore.model.Book; 
 import com.bookstore.model.OrderStatus; 
 import com.bookstore.model.User;
-import com.bookstore.util.algorithms.SortingAlgorithms; 
+
 import com.bookstore.util.algorithms.SearchingAlgorithms;
 import com.bookstore.util.queue.OrderQueueManager;
 import com.bookstore.service.QueueService; 
@@ -42,7 +42,7 @@ public class OrderService {
             } else {
                 item.setUnitPrice(book.getPrice());
                 totalAmount += item.getQuantity() * item.getUnitPrice();
-                item.setBook(book); // Link OrderItem with full Book object
+                // Note: Book details available via BookDAO.getBookById(item.getBookId())
             }
         }
 
@@ -95,30 +95,7 @@ public class OrderService {
         }
     }
 
-    // Legacy method for backward compatibility
-    public void processNextOrderInQueue() {
-        System.out.println("Warning: Using legacy processNextOrderInQueue method. User context recommended.");
-        
-        Order orderToProcess = OrderProcessingQueue.getNextOrderToProcess();
-        if (orderToProcess != null) {
-            System.out.println("Processing order: " + orderToProcess.getOrderId());
-
-            // 1. Sort book list in order (e.g. by title)
-            if (orderToProcess.getOrderItems() != null && !orderToProcess.getOrderItems().isEmpty()) {
-                SortingAlgorithms.quickSort(orderToProcess.getOrderItems(), SortingAlgorithms.BOOK_TITLE_COMPARATOR);
-                System.out.println("Order items sorted by title.");
-            }
-
-            // 2. Update stock and order status
-            for (OrderItem item : orderToProcess.getOrderItems()) {
-                bookDAO.updateBookStock(item.getBookId(), -item.getQuantity());
-            }
-            orderDAO.updateOrderStatus(orderToProcess.getOrderId(), OrderStatus.PROCESSING.name());
-            System.out.println("Stock updated and order status set to PROCESSING.");
-        } else {
-            System.out.println("Order processing queue is empty.");
-        }
-    }
+    // Note: Legacy processNextOrderInQueue() method removed. Use processNextOrderInQueue(User) instead.
 
     // Search order by ID
     public Order findOrderById(int orderId) {
@@ -143,95 +120,58 @@ public class OrderService {
         return SearchingAlgorithms.binarySearchOrderById(allOrdersFromDb, orderId);
     }
 
-    // New Queue ADT methods
+    // Queue Management Methods - Delegated to QueueService
+    // Note: These methods provide a unified interface for order and queue operations
+    // All queue-specific logic is handled by QueueService to maintain separation of concerns
 
-    /**
-     * Get user's queue orders
-     */
     public List<Order> getUserQueueOrders(User user) {
         return queueService.getUserQueueOrders(user);
     }
 
-    /**
-     * Get next order for user without removing it
-     */
     public Order peekNextOrder(User user) {
         return queueService.peekNextOrder(user);
     }
 
-    /**
-     * Get queue size for user
-     */
     public int getQueueSize(User user) {
         return queueService.getQueueSize(user);
     }
 
-    /**
-     * Get queue statistics for user
-     */
     public OrderQueueManager.UserQueueStatistics getUserQueueStats(User user) {
         return queueService.getUserQueueStats(user);
     }
 
-    /**
-     * Get overall queue statistics (admin only)
-     */
     public OrderQueueManager.QueueStatistics getOverallQueueStats(User user) {
         return queueService.getOverallQueueStats(user);
     }
 
-    /**
-     * Complete order processing
-     */
     public boolean completeOrder(Order order, User user) {
         return queueService.completeOrder(order, user);
     }
 
-    /**
-     * Cancel order with reason
-     */
     public boolean cancelOrder(Order order, User user, String reason) {
         return queueService.cancelOrder(order, user, reason);
     }
 
-    /**
-     * Load existing orders into queues (for initialization)
-     */
     public void initializeQueues(User currentUser) {
         queueService.loadExistingOrdersIntoQueues(currentUser);
     }
 
-    /**
-     * Get pending orders (admin only)
-     */
     public List<Order> getPendingOrders(User user) {
         return queueService.getPendingOrders(user);
     }
 
-    /**
-     * Get completed orders (admin only)
-     */
     public List<Order> getCompletedOrders(User user) {
         return queueService.getCompletedOrders(user);
     }
 
-    /**
-     * Clear user queue (admin only)
-     */
     public boolean clearUserQueue(int userId, User admin) {
         return queueService.clearUserQueue(userId, admin);
     }
 
-    /**
-     * Clear all queues (admin only)
-     */
     public boolean clearAllQueues(User admin) {
         return queueService.clearAllQueues(admin);
     }
 
-    /**
-     * Check if user has orders in queue
-     */
     public boolean hasOrdersInQueue(User user) {
         return queueService.hasOrdersInQueue(user);
     }

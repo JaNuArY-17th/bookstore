@@ -1,4 +1,4 @@
-package com.bookstore.util;
+package com.bookstore.util.security;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -95,10 +95,14 @@ public class PasswordUtil {
         boolean hasSpecial = false;
 
         for (char c : password.toCharArray()) {
-            if (Character.isUpperCase(c)) hasUpper = true;
-            else if (Character.isLowerCase(c)) hasLower = true;
-            else if (Character.isDigit(c)) hasDigit = true;
-            else if (!Character.isLetterOrDigit(c)) hasSpecial = true;
+            if (Character.isUpperCase(c))
+                hasUpper = true;
+            else if (Character.isLowerCase(c))
+                hasLower = true;
+            else if (Character.isDigit(c))
+                hasDigit = true;
+            else if (!Character.isLetterOrDigit(c))
+                hasSpecial = true;
         }
 
         return hasUpper && hasLower && hasDigit && hasSpecial;
@@ -109,9 +113,9 @@ public class PasswordUtil {
      */
     public static String getPasswordRequirements() {
         return "Password must be at least 8 characters long and contain:\n" +
-               "- At least one uppercase letter\n" +
-               "- At least one lowercase letter\n" +
-               "- At least one digit\n" +
-               "- At least one special character";
+                "- At least one uppercase letter\n" +
+                "- At least one lowercase letter\n" +
+                "- At least one digit\n" +
+                "- At least one special character";
     }
 }

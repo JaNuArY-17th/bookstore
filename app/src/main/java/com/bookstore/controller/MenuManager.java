@@ -3,7 +3,7 @@ package com.bookstore.controller;
 import com.bookstore.model.Role;
 import com.bookstore.model.User;
 import com.bookstore.service.AuthService;
-import com.bookstore.util.InputValidator;
+import com.bookstore.util.ui.InputValidator;
 
 /**
  * Manages all menu displays and navigation logic
@@ -118,10 +118,11 @@ public class MenuManager {
         System.out.println("=== CUSTOMER DASHBOARD ===");
         System.out.println("1. Browse Books");
         System.out.println("2. Search Books");
-        System.out.println("3. My Orders");
-        System.out.println("4. Place New Order");
-        System.out.println("5. Profile Settings");
-        System.out.println("6. Logout");
+        System.out.println("3. My Cart (" + authService.getCartService().getItemCount() + " items)");
+        System.out.println("4. My Orders");
+        System.out.println("5. Place New Order");
+        System.out.println("6. Profile Settings");
+        System.out.println("7. Logout");
         System.out.println("0. Exit");
 
         int choice = InputValidator.getIntInput("Enter your choice: ");
@@ -134,15 +135,18 @@ public class MenuManager {
                 orderController.showCustomerSearchBooks();
                 break;
             case 3:
-                orderController.showCustomerViewOrders();
+                orderController.showCartManagement();
                 break;
             case 4:
-                orderController.showCustomerPlaceOrder();
+                orderController.showCustomerViewOrders();
                 break;
             case 5:
-                authController.showUserProfileMenu();
+                orderController.showCustomerPlaceOrder();
                 break;
             case 6:
+                authController.showUserProfileMenu();
+                break;
+            case 7:
                 authService.logout();
                 System.out.println("Logged out successfully.");
                 return true; // Continue to login menu
@@ -163,6 +167,12 @@ public class MenuManager {
      */
     public boolean showMainMenu() {
         User currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            // This should not happen if login flow is correct, but handle gracefully
+            System.out.println("Error: No user logged in. Returning to login menu.");
+            return true;
+        }
+
         if (currentUser.getRole() == Role.ADMIN) {
             return showAdminMainMenu();
         } else {

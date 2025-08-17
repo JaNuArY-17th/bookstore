@@ -72,36 +72,8 @@ public class Admin extends User {
         return permissions.contains(permission) || permissions.contains("ALL");
     }
 
-    // Admin-specific methods
-    public boolean canManageUsers() {
-        return hasPermission("USER_MANAGEMENT") || adminLevel.equals("SUPER_ADMIN");
-    }
-
-    public boolean canManageBooks() {
-        return hasPermission("BOOK_MANAGEMENT");
-    }
-
-    public boolean canManageOrders() {
-        return hasPermission("ORDER_MANAGEMENT");
-    }
-
-    public boolean canViewReports() {
-        return hasPermission("REPORTS");
-    }
-
-    public boolean canManageSystem() {
-        return hasPermission("SYSTEM_MANAGEMENT") || adminLevel.equals("SUPER_ADMIN");
-    }
-
-    public void addPermission(String permission) {
-        if (!permissions.contains(permission)) {
-            permissions.add(permission);
-        }
-    }
-
-    public void removePermission(String permission) {
-        permissions.remove(permission);
-    }
+    // Note: Specific permission check methods removed as they're not used in the codebase.
+    // The hasPermission() method provides all necessary permission checking functionality.
 
     // Helper methods
     private List<String> getDefaultAdminPermissions() {

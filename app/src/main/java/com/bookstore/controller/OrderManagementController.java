@@ -10,8 +10,8 @@ import com.bookstore.model.OrderItem;
 import com.bookstore.model.User;
 import com.bookstore.service.AuthService;
 import com.bookstore.service.OrderService;
-import com.bookstore.util.DisplayFormatter;
-import com.bookstore.util.InputValidator;
+import com.bookstore.util.ui.DisplayFormatter;
+import com.bookstore.util.ui.InputValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +27,8 @@ public class OrderManagementController {
     private OrderService orderService;
     private AuthService authService;
 
-    public OrderManagementController(OrderDAO orderDAO, BookDAO bookDAO, CustomerDAO customerDAO, 
-                                   OrderService orderService, AuthService authService) {
+    public OrderManagementController(OrderDAO orderDAO, BookDAO bookDAO, CustomerDAO customerDAO,
+            OrderService orderService, AuthService authService) {
         this.orderDAO = orderDAO;
         this.bookDAO = bookDAO;
         this.customerDAO = customerDAO;
@@ -226,8 +226,10 @@ public class OrderManagementController {
                     for (Book book : books) {
                         System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
                                 book.getBookId(),
-                                book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..." : book.getTitle(),
-                                book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..." : book.getAuthor(),
+                                book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..."
+                                        : book.getTitle(),
+                                book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..."
+                                        : book.getAuthor(),
                                 book.getPrice(),
                                 book.getStockQuantity());
                     }
@@ -237,7 +239,8 @@ public class OrderManagementController {
                 System.out.println("1. View Book Details");
                 System.out.println("2. Add Book to Cart");
                 System.out.println("3. Search Books");
-                System.out.println("4. Refresh Book List");
+                System.out.println("4. View Cart (" + authService.getCartService().getItemCount() + " items)");
+                System.out.println("5. Refresh Book List");
                 System.out.println("0. Back to Customer Menu");
 
                 int choice = InputValidator.getIntInput("Enter your choice: ");
@@ -253,6 +256,9 @@ public class OrderManagementController {
                         showCustomerSearchBooks();
                         break;
                     case 4:
+                        showCartManagement();
+                        break;
+                    case 5:
                         // Refresh - just continue the loop
                         break;
                     case 0:
@@ -290,14 +296,165 @@ public class OrderManagementController {
             if (InputValidator.getConfirmation("\nWould you like to add this book to your cart? (y/n): ")) {
                 int quantity = InputValidator.getIntInput("Enter quantity: ");
                 if (quantity > 0 && quantity <= book.getStockQuantity()) {
-                    // Here you would add to cart functionality
-                    System.out.println("Book added to cart! (Cart functionality to be implemented)");
+                    authService.getCartService().addToCart(book.getBookId(), quantity);
                 } else {
                     System.out.println("Invalid quantity or insufficient stock.");
                 }
             }
         } else {
             System.out.println("\nThis book is currently out of stock.");
+        }
+    }
+
+    /**
+     * Show cart management interface
+     */
+    public void showCartManagement() {
+        while (true) {
+            authService.getCartService().viewCart();
+
+            if (authService.getCartService().isEmpty()) {
+                System.out.println("\nPress Enter to continue...");
+                InputValidator.getStringInput("");
+                return;
+            }
+
+            System.out.println("\n=== CART OPTIONS ===");
+            System.out.println("1. Update Item Quantity");
+            System.out.println("2. Remove Item");
+            System.out.println("3. Clear Cart");
+            System.out.println("4. Proceed to Checkout");
+            System.out.println("0. Back to Browse");
+
+            int choice = InputValidator.getIntInput("Enter your choice: ");
+
+            switch (choice) {
+                case 1:
+                    updateCartItemQuantity();
+                    break;
+                case 2:
+                    removeCartItem();
+                    break;
+                case 3:
+                    if (InputValidator.getConfirmation("Are you sure you want to clear your cart? (y/n): ")) {
+                        authService.getCartService().clearCart();
+                    }
+                    break;
+                case 4:
+                    proceedToCheckoutFromCart();
+                    return;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+
+    /**
+     * Update cart item quantity
+     */
+    private void updateCartItemQuantity() {
+        int bookId = InputValidator.getIntInput("Enter Book ID to update: ");
+        int newQuantity = InputValidator.getIntInput("Enter new quantity (0 to remove): ");
+        authService.getCartService().updateQuantity(bookId, newQuantity);
+    }
+
+    /**
+     * Remove item from cart
+     */
+    private void removeCartItem() {
+        int bookId = InputValidator.getIntInput("Enter Book ID to remove: ");
+        authService.getCartService().removeFromCart(bookId);
+    }
+
+    /**
+     * Proceed to checkout from cart
+     */
+    private void proceedToCheckoutFromCart() {
+        if (authService.getCartService().isEmpty()) {
+            System.out.println("Your cart is empty.");
+            return;
+        }
+
+        System.out.println("\n=== CHECKOUT ===");
+        authService.getCartService().viewCart();
+
+        if (InputValidator.getConfirmation("\nProceed to checkout? (y/n): ")) {
+            // Transfer cart items to order and process
+            showCustomerPlaceOrderFromCart();
+        }
+    }
+
+    /**
+     * Place order using items from cart
+     */
+    private void showCustomerPlaceOrderFromCart() {
+        if (!authService.isLoggedIn()) {
+            System.out.println("Please login to place an order.");
+            return;
+        }
+
+        User currentUser = authService.getCurrentUser();
+        if (!currentUser.isCustomer()) {
+            System.out.println("This feature is only available for customers.");
+            return;
+        }
+
+        // Get customer record for the logged-in user
+        Customer customer = customerDAO.getCustomerByUserId(currentUser.getUserId());
+        if (customer == null) {
+            System.out.println("Customer profile not found. Please contact support.");
+            return;
+        }
+
+        // Get cart items
+        List<OrderItem> cartItems = authService.getCartService().getCartItems();
+        if (cartItems.isEmpty()) {
+            System.out.println("Your cart is empty.");
+            return;
+        }
+
+        // Validate stock availability
+        boolean allItemsAvailable = true;
+        for (OrderItem item : cartItems) {
+            Book book = bookDAO.getBookById(item.getBookId());
+            if (book == null || book.getStockQuantity() < item.getQuantity()) {
+                System.out.println("Warning: " + (book != null ? book.getTitle() : "Unknown book") +
+                                 " has insufficient stock.");
+                allItemsAvailable = false;
+            }
+        }
+
+        if (!allItemsAvailable) {
+            System.out.println("Please update your cart and try again.");
+            return;
+        }
+
+        // Show order summary
+        double totalAmount = authService.getCartService().getCartTotal();
+        DisplayFormatter.displayOrderSummary(cartItems, totalAmount);
+
+        // Confirm order
+        if (!InputValidator.getConfirmation("Confirm order? (y/n): ")) {
+            System.out.println("Order cancelled.");
+            return;
+        }
+
+        // Create and place order
+        Order order = new Order();
+        order.setCustomerId(customer.getCustomerId());
+        order.setOrderItems(authService.getCartService().transferToOrder()); // This clears the cart
+
+        int orderId = orderService.createNewOrder(order, currentUser);
+        if (orderId != -1) {
+            System.out.println("\n🎉 Order placed successfully!");
+            System.out.println("Order ID: " + orderId);
+            System.out.println("Total Amount: $" + String.format("%.2f", totalAmount));
+            System.out.println("Order has been added to the processing queue.");
+            System.out.println("\nYou can track your order status in 'My Orders' section.");
+        } else {
+            System.out.println("Failed to place order. Please try again or contact support.");
         }
     }
 
@@ -324,9 +481,7 @@ public class OrderManagementController {
 
         int quantity = InputValidator.getIntInput("Enter quantity to add: ");
         if (quantity > 0 && quantity <= book.getStockQuantity()) {
-            // Here you would add to cart functionality
-            System.out.println("Added " + quantity + " copies of '" + book.getTitle() + "' to cart!");
-            System.out.println("(Cart functionality to be implemented)");
+            authService.getCartService().addToCart(book.getBookId(), quantity);
         } else {
             System.out.println("Invalid quantity or insufficient stock.");
         }
@@ -338,7 +493,8 @@ public class OrderManagementController {
     public void showCustomerSearchBooks() {
         while (true) {
             System.out.println("\n=== SEARCH BOOKS ===");
-            String searchTerm = InputValidator.getTrimmedStringInput("Enter search term (title or author) or 'exit' to return: ");
+            String searchTerm = InputValidator
+                    .getTrimmedStringInput("Enter search term (title or author) or 'exit' to return: ");
 
             if (searchTerm.equalsIgnoreCase("exit")) {
                 return;
@@ -360,8 +516,10 @@ public class OrderManagementController {
                     for (Book book : books) {
                         System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
                                 book.getBookId(),
-                                book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..." : book.getTitle(),
-                                book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..." : book.getAuthor(),
+                                book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..."
+                                        : book.getTitle(),
+                                book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..."
+                                        : book.getAuthor(),
                                 book.getPrice(),
                                 book.getStockQuantity());
                     }
@@ -369,7 +527,8 @@ public class OrderManagementController {
                     System.out.println("\n=== SEARCH OPTIONS ===");
                     System.out.println("1. View Book Details");
                     System.out.println("2. Add Book to Cart");
-                    System.out.println("3. New Search");
+                    System.out.println("3. View Cart (" + authService.getCartService().getItemCount() + " items)");
+                    System.out.println("4. New Search");
                     System.out.println("0. Back to Customer Menu");
 
                     int choice = InputValidator.getIntInput("Enter your choice: ");
@@ -382,6 +541,9 @@ public class OrderManagementController {
                             addBookToCartFromBrowse();
                             break;
                         case 3:
+                            showCartManagement();
+                            break;
+                        case 4:
                             // Continue to new search
                             break;
                         case 0:
@@ -423,18 +585,17 @@ public class OrderManagementController {
             }
 
             System.out.printf("%-8s %-12s %-15s %-15s %-10s%n",
-                            "Order ID", "Date", "Status", "Tracking", "Total");
+                    "Order ID", "Date", "Status", "Tracking", "Total");
             System.out.println("=".repeat(75));
 
             for (Order order : userOrders) {
                 String tracking = order.getTrackingNumber() != null ? order.getTrackingNumber() : "N/A";
                 System.out.printf("%-8d %-12s %-15s %-15s $%-9.2f%n",
-                    order.getOrderId(),
-                    order.getOrderDate().toString(), // Full date
-                    order.getStatus(),
-                    tracking,
-                    order.getTotalAmount()
-                );
+                        order.getOrderId(),
+                        order.getOrderDate().toString(), // Full date
+                        order.getStatus(),
+                        tracking,
+                        order.getTotalAmount());
             }
 
             if (InputValidator.getConfirmation("\nWould you like to view details of a specific order? (y/n): ")) {
@@ -515,11 +676,11 @@ public class OrderManagementController {
         for (Book book : books) {
             if (book.getStockQuantity() > 0) { // Only show books in stock
                 System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
-                    book.getBookId(),
-                    book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..." : book.getTitle(),
-                    book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..." : book.getAuthor(),
-                    book.getPrice(),
-                    book.getStockQuantity());
+                        book.getBookId(),
+                        book.getTitle().length() > 30 ? book.getTitle().substring(0, 27) + "..." : book.getTitle(),
+                        book.getAuthor().length() > 20 ? book.getAuthor().substring(0, 17) + "..." : book.getAuthor(),
+                        book.getPrice(),
+                        book.getStockQuantity());
             }
         }
 
@@ -569,7 +730,8 @@ public class OrderManagementController {
                 if (existingItem.getBookId() == bookId) {
                     int newQuantity = existingItem.getQuantity() + quantity;
                     if (newQuantity > book.getStockQuantity()) {
-                        System.out.println("Total quantity would exceed available stock (" + book.getStockQuantity() + ").");
+                        System.out.println(
+                                "Total quantity would exceed available stock (" + book.getStockQuantity() + ").");
                         continue;
                     }
                     existingItem.setQuantity(newQuantity);
@@ -632,8 +794,8 @@ public class OrderManagementController {
     private boolean isFirstLoginOrIncompleteProfile(Customer customer) {
         // Check if essential customer information is missing
         return customer.getAddress() == null || customer.getAddress().trim().isEmpty() ||
-               customer.getPhoneNumber() == null || customer.getPhoneNumber().trim().isEmpty() ||
-               customer.getPreferredPaymentMethod() == null || customer.getPreferredPaymentMethod().trim().isEmpty();
+                customer.getPhoneNumber() == null || customer.getPhoneNumber().trim().isEmpty() ||
+                customer.getPreferredPaymentMethod() == null || customer.getPreferredPaymentMethod().trim().isEmpty();
     }
 
     /**
@@ -723,8 +885,8 @@ public class OrderManagementController {
         System.out.println("=== QUEUE STATUS OVERVIEW ===");
         System.out.println("Total Orders: " + allOrders.size());
         System.out.println("Pending: " + pendingCount + " | Processing: " + processingCount +
-                          " | Shipped: " + shippedCount + " | Delivered: " + deliveredCount +
-                          " | Cancelled: " + cancelledCount);
+                " | Shipped: " + shippedCount + " | Delivered: " + deliveredCount +
+                " | Cancelled: " + cancelledCount);
 
         // Show all orders in a table
         System.out.println("\n=== ALL ORDERS IN QUEUE ===");
@@ -756,17 +918,15 @@ public class OrderManagementController {
 
         for (Order order : allOrders) {
             int itemCount = order.getOrderItems() != null ? order.getOrderItems().size() : 0;
-            String dateStr = order.getOrderDate() != null ?
-                           order.getOrderDate().toString().substring(0, 10) : "N/A";
+            String dateStr = order.getOrderDate() != null ? order.getOrderDate().toString().substring(0, 10) : "N/A";
 
             System.out.printf("%-8d %-12d %-15s $%-11.2f %-15s %-20d%n",
-                order.getOrderId(),
-                order.getCustomerId(),
-                order.getStatus(),
-                order.getTotalAmount(),
-                dateStr,
-                itemCount
-            );
+                    order.getOrderId(),
+                    order.getCustomerId(),
+                    order.getStatus(),
+                    order.getTotalAmount(),
+                    dateStr,
+                    itemCount);
         }
     }
 
@@ -789,9 +949,9 @@ public class OrderManagementController {
      */
     private void processNextPendingOrder(List<Order> allOrders) {
         List<Order> pendingOrders = allOrders.stream()
-            .filter(o -> o.getStatus().toString().equals("PENDING"))
-            .sorted((o1, o2) -> o1.getOrderDate().compareTo(o2.getOrderDate())) // Oldest first
-            .toList();
+                .filter(o -> o.getStatus().toString().equals("PENDING"))
+                .sorted((o1, o2) -> o1.getOrderDate().compareTo(o2.getOrderDate())) // Oldest first
+                .toList();
 
         if (pendingOrders.isEmpty()) {
             System.out.println("No pending orders to process.");
@@ -866,9 +1026,9 @@ public class OrderManagementController {
 
             List<Order> allOrders = orderDAO.getAllOrders();
             List<Order> filteredOrders = allOrders.stream()
-                .filter(o -> o.getStatus().toString().equals(status))
-                .sorted((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate())) // Newest first
-                .toList();
+                    .filter(o -> o.getStatus().toString().equals(status))
+                    .sorted((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate())) // Newest first
+                    .toList();
 
             System.out.println("\n=== " + status + " ORDERS ===");
             if (filteredOrders.isEmpty()) {
@@ -882,16 +1042,15 @@ public class OrderManagementController {
 
             for (Order order : filteredOrders) {
                 int itemCount = order.getOrderItems() != null ? order.getOrderItems().size() : 0;
-                String dateStr = order.getOrderDate() != null ?
-                               order.getOrderDate().toString().substring(0, 10) : "N/A";
+                String dateStr = order.getOrderDate() != null ? order.getOrderDate().toString().substring(0, 10)
+                        : "N/A";
 
                 System.out.printf("%-8d %-12d $%-11.2f %-15s %-20d%n",
-                    order.getOrderId(),
-                    order.getCustomerId(),
-                    order.getTotalAmount(),
-                    dateStr,
-                    itemCount
-                );
+                        order.getOrderId(),
+                        order.getCustomerId(),
+                        order.getTotalAmount(),
+                        dateStr,
+                        itemCount);
             }
         }
     }
@@ -1040,15 +1199,13 @@ public class OrderManagementController {
         System.out.println("=".repeat(60));
 
         for (Order order : customerOrders) {
-            String dateStr = order.getOrderDate() != null ?
-                           order.getOrderDate().toString().substring(0, 10) : "N/A";
+            String dateStr = order.getOrderDate() != null ? order.getOrderDate().toString().substring(0, 10) : "N/A";
 
             System.out.printf("%-8d %-15s $%-11.2f %-15s%n",
-                order.getOrderId(),
-                order.getStatus(),
-                order.getTotalAmount(),
-                dateStr
-            );
+                    order.getOrderId(),
+                    order.getStatus(),
+                    order.getTotalAmount(),
+                    dateStr);
         }
     }
 
@@ -1062,13 +1219,14 @@ public class OrderManagementController {
 
         List<Order> allOrders = orderDAO.getAllOrders();
         List<Order> dateFilteredOrders = allOrders.stream()
-            .filter(o -> {
-                if (o.getOrderDate() == null) return false;
-                String orderDateStr = o.getOrderDate().toString().substring(0, 10);
-                return orderDateStr.compareTo(startDate) >= 0 && orderDateStr.compareTo(endDate) <= 0;
-            })
-            .sorted((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate()))
-            .toList();
+                .filter(o -> {
+                    if (o.getOrderDate() == null)
+                        return false;
+                    String orderDateStr = o.getOrderDate().toString().substring(0, 10);
+                    return orderDateStr.compareTo(startDate) >= 0 && orderDateStr.compareTo(endDate) <= 0;
+                })
+                .sorted((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate()))
+                .toList();
 
         if (dateFilteredOrders.isEmpty()) {
             System.out.println("No orders found in date range: " + startDate + " to " + endDate);
@@ -1081,16 +1239,14 @@ public class OrderManagementController {
         System.out.println("=".repeat(75));
 
         for (Order order : dateFilteredOrders) {
-            String dateStr = order.getOrderDate() != null ?
-                           order.getOrderDate().toString().substring(0, 10) : "N/A";
+            String dateStr = order.getOrderDate() != null ? order.getOrderDate().toString().substring(0, 10) : "N/A";
 
             System.out.printf("%-8d %-12d %-15s $%-11.2f %-15s%n",
-                order.getOrderId(),
-                order.getCustomerId(),
-                order.getStatus(),
-                order.getTotalAmount(),
-                dateStr
-            );
+                    order.getOrderId(),
+                    order.getCustomerId(),
+                    order.getStatus(),
+                    order.getTotalAmount(),
+                    dateStr);
         }
     }
 
@@ -1305,12 +1461,12 @@ public class OrderManagementController {
 
         System.out.println("\nSorting by title (Quick Sort):");
         com.bookstore.util.algorithms.SortingAlgorithms.quickSortBooks(books,
-            com.bookstore.util.algorithms.SortingAlgorithms.BOOK_TITLE_COMPARATOR_BOOK);
+                com.bookstore.util.algorithms.SortingAlgorithms.BOOK_TITLE_COMPARATOR_BOOK);
         DisplayFormatter.displayBookList(books);
 
         System.out.println("\nSorting by price (Quick Sort):");
         com.bookstore.util.algorithms.SortingAlgorithms.quickSortBooks(books,
-            com.bookstore.util.algorithms.SortingAlgorithms.BOOK_PRICE_COMPARATOR);
+                com.bookstore.util.algorithms.SortingAlgorithms.BOOK_PRICE_COMPARATOR);
         DisplayFormatter.displayBookList(books);
     }
 

@@ -66,9 +66,12 @@ public class Customer extends User {
     }
 
     public void setName(String name) {
-        String[] parts = name.split(" ", 2);
-        this.firstName = parts[0];
-        this.lastName = parts.length > 1 ? parts[1] : "";
+        // Simple name setting - complex parsing logic removed as it's not used
+        if (name != null && !name.trim().isEmpty()) {
+            String[] parts = name.trim().split("\\s+", 2);
+            this.firstName = parts[0];
+            this.lastName = parts.length > 1 ? parts[1] : "";
+        }
     }
 
     public String getAddress() {
@@ -173,19 +176,9 @@ public class Customer extends User {
         return hasPermission("VIEW_BOOKS");
     }
 
-    public void addOrderToHistory(int orderId) {
-        if (!orderHistory.contains(orderId)) {
-            orderHistory.add(orderId);
-        }
-    }
-
-    public boolean hasOrderHistory() {
-        return !orderHistory.isEmpty();
-    }
-
-    public int getTotalOrders() {
-        return orderHistory.size();
-    }
+    // Note: Order history methods removed as order tracking is handled by the database
+    // and OrderDAO. The orderHistory field is kept for potential future use but
+    // actual order tracking should use OrderDAO.getOrdersByCustomerId() or similar methods.
 
     @Override
     public String toString() {

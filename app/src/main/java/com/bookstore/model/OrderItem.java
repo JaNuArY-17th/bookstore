@@ -6,7 +6,9 @@ public class OrderItem {
     private int bookId;
     private int quantity;
     private double unitPrice;
-    private Book book; 
+    // Note: Removed redundant 'book' field as bookId is sufficient for lookups
+    // Book details should be retrieved via BookDAO.getBookById(bookId) when needed
+
     // Constructors
     public OrderItem() {
     }
@@ -60,13 +62,7 @@ public class OrderItem {
         this.unitPrice = unitPrice;
     }
 
-    public Book getBook() {
-        return book;
-    }
-
-    public void setBook(Book book) {
-        this.book = book;
-    }
+    // Book getter/setter removed - use BookDAO.getBookById(bookId) to retrieve book details
 
     @Override
     public String toString() {
@@ -76,7 +72,11 @@ public class OrderItem {
                 ", bookId=" + bookId +
                 ", quantity=" + quantity +
                 ", unitPrice=" + unitPrice +
-                ", book=" + book +
                 '}';
+    }
+
+    // Utility methods
+    public double getTotalPrice() {
+        return quantity * unitPrice;
     }
 }

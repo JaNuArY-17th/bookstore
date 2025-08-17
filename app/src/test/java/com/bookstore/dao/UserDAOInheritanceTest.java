@@ -3,7 +3,7 @@ package com.bookstore.dao;
 import com.bookstore.model.User;
 import com.bookstore.model.Admin;
 import com.bookstore.model.Customer;
-import com.bookstore.model.Role;
+
 
 /**
  * Test class to verify UserDAO inheritance functionality
@@ -50,8 +50,8 @@ public class UserDAOInheritanceTest {
         System.out.println("  User Type: " + testAdmin.getUserType());
         System.out.println("  Department: " + testAdmin.getDepartment());
         System.out.println("  Admin Level: " + testAdmin.getAdminLevel());
-        System.out.println("  Can Manage Users: " + testAdmin.canManageUsers());
-        System.out.println("  Can Manage Books: " + testAdmin.canManageBooks());
+        System.out.println("  Has USER_MANAGEMENT permission: " + testAdmin.hasPermission("USER_MANAGEMENT"));
+        System.out.println("  Has BOOK_MANAGEMENT permission: " + testAdmin.hasPermission("BOOK_MANAGEMENT"));
         System.out.println("  Has USER_MANAGEMENT permission: " + testAdmin.hasPermission("USER_MANAGEMENT"));
         System.out.println("  Has VIEW_BOOKS permission: " + testAdmin.hasPermission("VIEW_BOOKS"));
         System.out.println();
@@ -71,16 +71,11 @@ public class UserDAOInheritanceTest {
             System.out.println();
         }
         
-        // Test order history functionality
+        // Test order history functionality (now managed by database)
         System.out.println("4. Testing Customer Order History:");
-        testCustomer.addOrderToHistory(1001);
-        testCustomer.addOrderToHistory(1002);
-        testCustomer.addOrderToHistory(1003);
-        
-        System.out.println("Customer order history:");
-        System.out.println("  Has order history: " + testCustomer.hasOrderHistory());
-        System.out.println("  Total orders: " + testCustomer.getTotalOrders());
-        System.out.println("  Order IDs: " + testCustomer.getOrderHistory());
+        System.out.println("Note: Order history is now managed by OrderDAO.getOrdersByCustomerId()");
+        System.out.println("Customer order history field: " + testCustomer.getOrderHistory());
+        System.out.println("Customer can place orders: " + testCustomer.canPlaceOrder());
         System.out.println();
         
         System.out.println("=== All inheritance tests completed successfully! ===");

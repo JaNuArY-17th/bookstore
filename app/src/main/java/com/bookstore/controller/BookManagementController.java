@@ -2,8 +2,8 @@ package com.bookstore.controller;
 
 import com.bookstore.dao.BookDAO;
 import com.bookstore.model.Book;
-import com.bookstore.util.DisplayFormatter;
-import com.bookstore.util.InputValidator;
+import com.bookstore.util.ui.DisplayFormatter;
+import com.bookstore.util.ui.InputValidator;
 import com.bookstore.util.algorithms.SortingAlgorithms;
 
 import java.util.List;

@@ -1,13 +1,18 @@
 package com.bookstore.util.queue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * Array-based implementation of QueueADT
  * Uses circular array for efficient space utilization
- * 
+ *
+ * Characteristics:
+ * - Fixed capacity (must be specified at creation)
+ * - O(1) enqueue/dequeue operations
+ * - Memory efficient for known capacity requirements
+ * - Good cache locality due to contiguous memory
+ *
  * @param <T> The type of elements stored in the queue
  */
 public class ArrayQueue<T> implements QueueADT<T> {
@@ -142,14 +147,7 @@ public class ArrayQueue<T> implements QueueADT<T> {
         return false;
     }
     
-    /**
-     * Get the current state of the internal array (for debugging)
-     * @return String representation of the internal array
-     */
-    public String getInternalState() {
-        return String.format("ArrayQueue{capacity=%d, size=%d, front=%d, rear=%d, array=%s}", 
-                           capacity, size, front, rear, Arrays.toString(queue));
-    }
+    // Note: getInternalState() method removed as it was only used for debugging and not used in production
     
     @Override
     public String toString() {

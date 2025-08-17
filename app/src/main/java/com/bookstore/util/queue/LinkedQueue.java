@@ -6,7 +6,13 @@ import java.util.List;
 /**
  * Linked list-based implementation of QueueADT
  * Provides dynamic sizing with optional capacity limits
- * 
+ *
+ * Characteristics:
+ * - Dynamic capacity (can grow as needed)
+ * - O(1) enqueue/dequeue operations
+ * - Memory allocated per element (no wasted space)
+ * - Preferred implementation for production use
+ *
  * @param <T> The type of elements stored in the queue
  */
 public class LinkedQueue<T> implements QueueADT<T> {
@@ -162,18 +168,7 @@ public class LinkedQueue<T> implements QueueADT<T> {
         return false;
     }
     
-    /**
-     * Get the element at the rear of the queue without removing it
-     * @return The element at the rear of the queue
-     * @throws QueueEmptyException if the queue is empty
-     */
-    public T peekRear() throws QueueEmptyException {
-        if (isEmpty()) {
-            throw new QueueEmptyException("Cannot peek at empty queue");
-        }
-        
-        return rear.data;
-    }
+    // Note: peekRear() method removed as it was not used anywhere in the codebase
     
     @Override
     public String toString() {

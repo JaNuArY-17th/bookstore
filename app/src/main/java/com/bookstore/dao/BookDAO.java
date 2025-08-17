@@ -1,7 +1,7 @@
 package com.bookstore.dao;
 
 import com.bookstore.model.Book;
-import com.bookstore.util.DBConnection;
+import com.bookstore.util.database.DBConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

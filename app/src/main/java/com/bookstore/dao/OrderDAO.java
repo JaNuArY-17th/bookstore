@@ -2,9 +2,8 @@ package com.bookstore.dao;
 
 import com.bookstore.model.Order;
 import com.bookstore.model.OrderItem;
-import com.bookstore.model.Book;
 import com.bookstore.model.OrderStatus;
-import com.bookstore.util.DBConnection;
+import com.bookstore.util.database.DBConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -16,7 +15,9 @@ public class OrderDAO {
         String sqlOrderItem = "INSERT INTO OrderItems (order_id, book_id, quantity, unit_price) VALUES (?, ?, ?, ?)";
         int orderId = -1;
 
-        try (Connection conn = DBConnection.getConnection()) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
             conn.setAutoCommit(false); // Start transaction
 
             // Insert Order
@@ -36,26 +37,37 @@ public class OrderDAO {
             }
 
             // Insert Order Items
-            try (PreparedStatement pstmtOrderItem = conn.prepareStatement(sqlOrderItem)) {
-                for (OrderItem item : order.getOrderItems()) {
-                    pstmtOrderItem.setInt(1, orderId);
-                    pstmtOrderItem.setInt(2, item.getBookId());
-                    pstmtOrderItem.setInt(3, item.getQuantity());
-                    pstmtOrderItem.setDouble(4, item.getUnitPrice());
-                    pstmtOrderItem.addBatch();
+            if (order.getOrderItems() != null && !order.getOrderItems().isEmpty()) {
+                try (PreparedStatement pstmtOrderItem = conn.prepareStatement(sqlOrderItem)) {
+                    for (OrderItem item : order.getOrderItems()) {
+                        pstmtOrderItem.setInt(1, orderId);
+                        pstmtOrderItem.setInt(2, item.getBookId());
+                        pstmtOrderItem.setInt(3, item.getQuantity());
+                        pstmtOrderItem.setDouble(4, item.getUnitPrice());
+                        pstmtOrderItem.addBatch();
+                    }
+                    pstmtOrderItem.executeBatch();
                 }
-                pstmtOrderItem.executeBatch();
             }
             conn.commit();
         } catch (SQLException e) {
             System.err.println("Error adding order: " + e.getMessage());
             // Rollback if error
-            try (Connection conn = DBConnection.getConnection()) {
-                if (conn != null) {
+            if (conn != null) {
+                try {
                     conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    System.err.println("Error during rollback: " + rollbackEx.getMessage());
                 }
-            } catch (SQLException rollbackEx) {
-                System.err.println("Error during rollback: " + rollbackEx.getMessage());
+            }
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true); // Reset auto-commit
+                    conn.close();
+                } catch (SQLException closeEx) {
+                    System.err.println("Error closing connection: " + closeEx.getMessage());
+                }
             }
         }
         return orderId;
@@ -64,8 +76,7 @@ public class OrderDAO {
     // Get order by id
     public Order getOrderById(int orderId) {
         String sqlOrder = "SELECT * FROM Orders WHERE order_id = ?";
-        String sqlOrderItems = "SELECT oi.*, b.title, b.author, b.isbn, b.price " +
-                "FROM OrderItems oi JOIN Books b ON oi.book_id = b.book_id WHERE oi.order_id = ?";
+        String sqlOrderItems = "SELECT * FROM OrderItems WHERE order_id = ?";
         Order order = null;
 
         try (Connection conn = DBConnection.getConnection()) {
@@ -97,14 +108,8 @@ public class OrderDAO {
                         item.setQuantity(rsItems.getInt("quantity"));
                         item.setUnitPrice(rsItems.getDouble("unit_price"));
 
-                        // Assign book information to OrderItem
-                        Book book = new Book();
-                        book.setBookId(rsItems.getInt("book_id"));
-                        book.setTitle(rsItems.getString("title"));
-                        book.setAuthor(rsItems.getString("author"));
-                        book.setIsbn(rsItems.getString("isbn"));
-                        book.setPrice(rsItems.getDouble("price"));
-                        item.setBook(book); // Link OrderItem with Book object
+                        // Note: Book information is available via BookDAO.getBookById(item.getBookId())
+                        // Removed direct book assignment as it was redundant with bookId
 
                         orderItems.add(item);
                     }
@@ -153,18 +158,19 @@ public class OrderDAO {
 
     /**
      * Get orders by customer ID
+     * 
      * @param customerId The customer ID
      * @return List of orders for the customer
      */
     public List<Order> getOrdersByCustomerId(int customerId) {
         List<Order> orders = new ArrayList<>();
         String sql = "SELECT order_id FROM Orders WHERE customer_id = ? ORDER BY order_date DESC";
-        
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
             pstmt.setInt(1, customerId);
-            
+
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     orders.add(getOrderById(rs.getInt("order_id")));
@@ -178,19 +184,19 @@ public class OrderDAO {
 
     /**
      * Get order items by order ID
+     * 
      * @param orderId The order ID
      * @return List of order items for the order
      */
     public List<OrderItem> getOrderItemsByOrderId(int orderId) {
         List<OrderItem> orderItems = new ArrayList<>();
-        String sql = "SELECT oi.*, b.title, b.author, b.isbn, b.price " +
-                    "FROM OrderItems oi JOIN Books b ON oi.book_id = b.book_id WHERE oi.order_id = ?";
-        
+        String sql = "SELECT * FROM OrderItems WHERE order_id = ?";
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
             pstmt.setInt(1, orderId);
-            
+
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     OrderItem item = new OrderItem();
@@ -200,14 +206,8 @@ public class OrderDAO {
                     item.setQuantity(rs.getInt("quantity"));
                     item.setUnitPrice(rs.getDouble("unit_price"));
 
-                    // Assign book information to OrderItem
-                    Book book = new Book();
-                    book.setBookId(rs.getInt("book_id"));
-                    book.setTitle(rs.getString("title"));
-                    book.setAuthor(rs.getString("author"));
-                    book.setIsbn(rs.getString("isbn"));
-                    book.setPrice(rs.getDouble("price"));
-                    item.setBook(book);
+                    // Note: Book information is available via BookDAO.getBookById(item.getBookId())
+                    // Removed direct book assignment as it was redundant with bookId
 
                     orderItems.add(item);
                 }
@@ -220,17 +220,18 @@ public class OrderDAO {
 
     /**
      * Get orders by user ID (for registered customers)
+     * 
      * @param userId The user ID from Users table
      * @return List of orders for the user
      */
     public List<Order> getOrdersByUserId(int userId) {
         List<Order> orders = new ArrayList<>();
         String sql = "SELECT o.order_id FROM Orders o " +
-                    "JOIN Customers c ON o.customer_id = c.customer_id " +
-                    "WHERE c.user_id = ? ORDER BY o.order_date DESC";
+                "JOIN Customers c ON o.customer_id = c.customer_id " +
+                "WHERE c.user_id = ? ORDER BY o.order_date DESC";
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, userId);
             try (ResultSet rs = pstmt.executeQuery()) {

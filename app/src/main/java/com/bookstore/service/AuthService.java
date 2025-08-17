@@ -5,7 +5,7 @@ import com.bookstore.model.User;
 import com.bookstore.model.Admin;
 import com.bookstore.model.Customer;
 import com.bookstore.model.Role;
-import com.bookstore.util.PasswordUtil;
+import com.bookstore.util.security.PasswordUtil;
 
 /**
  * Authentication and Authorization Service
@@ -13,9 +13,11 @@ import com.bookstore.util.PasswordUtil;
 public class AuthService {
     private UserDAO userDAO;
     private User currentUser;
+    private CartService cartService;
 
     public AuthService() {
         this.userDAO = new UserDAO();
+        this.cartService = new CartService();
     }
 
     /**
@@ -37,6 +39,7 @@ public class AuthService {
      */
     public void logout() {
         this.currentUser = null;
+        this.cartService.clearCart(); // Clear cart on logout
     }
 
     /**
@@ -60,19 +63,14 @@ public class AuthService {
         return currentUser != null && currentUser.isAdmin();
     }
 
-    /**
-     * Check if current user has permission for admin operations
-     */
-    public boolean hasAdminPermission() {
-        return isCurrentUserAdmin();
-    }
+    // Note: hasAdminPermission() method removed as it duplicated isCurrentUserAdmin() functionality
 
     /**
      * Register a new customer (admin only)
      */
     public boolean registerCustomer(String username, String password, String email, 
                                    String firstName, String lastName) {
-        if (!hasAdminPermission()) {
+        if (!isCurrentUserAdmin()) {
             System.err.println("Access denied: Admin permission required to register customers.");
             return false;
         }
@@ -89,7 +87,7 @@ public class AuthService {
      */
     public boolean registerAdmin(String username, String password, String email,
                                 String firstName, String lastName) {
-        if (!hasAdminPermission()) {
+        if (!isCurrentUserAdmin()) {
             System.err.println("Access denied: Admin permission required to register admins.");
             return false;
         }
@@ -106,7 +104,7 @@ public class AuthService {
      */
     public boolean registerUser(String username, String password, String email,
                                String firstName, String lastName, Role role) {
-        if (!hasAdminPermission()) {
+        if (!isCurrentUserAdmin()) {
             System.err.println("Access denied: Admin permission required to register users.");
             return false;
         }
@@ -148,21 +146,42 @@ public class AuthService {
         return success;
     }
 
-    /**
-     * Create default admin user if none exists
-     */
-    public void createDefaultAdminIfNeeded() {
-        // Admin users are managed through database setup
-        // No automatic admin creation needed
-    }
+    // Note: createDefaultAdminIfNeeded() method removed as it was empty and unused
 
     /**
      * Get user DAO for admin operations
      */
     public UserDAO getUserDAO() {
-        if (!hasAdminPermission()) {
+        if (!isCurrentUserAdmin()) {
             throw new SecurityException("Access denied: Admin permission required.");
         }
         return userDAO;
+    }
+
+    /**
+     * Get user DAO for system initialization (bypasses security check)
+     * This method should only be used during system bootstrap
+     */
+    public UserDAO getUserDAOForInitialization() {
+        return userDAO;
+    }
+
+    /**
+     * Register the first admin during system initialization (bypasses security check)
+     * This method should only be used during system bootstrap
+     */
+    public boolean registerAdminForInitialization(String username, String password, String email,
+                                                 String firstName, String lastName) {
+        String hashedPassword = PasswordUtil.hashPassword(password);
+        Admin newAdmin = new Admin(username, hashedPassword, email, firstName, lastName);
+        return userDAO.addUser(newAdmin) != -1;
+    }
+
+    /**
+     * Get cart service for current user
+     * @return CartService instance
+     */
+    public CartService getCartService() {
+        return cartService;
     }
 }

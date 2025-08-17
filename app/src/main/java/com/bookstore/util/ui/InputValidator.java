@@ -1,4 +1,4 @@
-package com.bookstore.util;
+package com.bookstore.util.ui;
 
 import java.util.Scanner;
 

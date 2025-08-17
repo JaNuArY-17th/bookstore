@@ -1,4 +1,4 @@
-package com.bookstore.util;
+package com.bookstore.util.database;
 
 import java.sql.Connection;
 import java.sql.Statement;

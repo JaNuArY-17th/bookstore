@@ -67,7 +67,16 @@ public class Book {
     }
 
     public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;
+        this.stockQuantity = Math.max(0, stockQuantity); // Ensure non-negative stock
+    }
+
+    // Utility methods
+    public boolean isInStock() {
+        return stockQuantity > 0;
+    }
+
+    public boolean hasStock(int requestedQuantity) {
+        return stockQuantity >= requestedQuantity;
     }
 
     @Override

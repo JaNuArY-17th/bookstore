@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Comparator;
 
 /**
  * Centralized Order Queue Manager
@@ -27,21 +26,8 @@ public class OrderQueueManager {
     // Queue for completed orders (for history/reporting)
     private static final QueueADT<Order> completedQueue = new LinkedQueue<>(2000);
     
-    // Comparators for different queue orderings
-    private static final Comparator<Order> ORDER_DATE_COMPARATOR = 
-        Comparator.comparing(Order::getOrderDate);
-    
-    private static final Comparator<Order> ORDER_PRIORITY_COMPARATOR = 
-        (o1, o2) -> {
-            // Priority: PENDING > PROCESSING > SHIPPED > DELIVERED > CANCELLED
-            int priority1 = getOrderPriority(o1);
-            int priority2 = getOrderPriority(o2);
-            if (priority1 != priority2) {
-                return Integer.compare(priority1, priority2);
-            }
-            // If same priority, order by date (oldest first)
-            return o1.getOrderDate().compareTo(o2.getOrderDate());
-        };
+    // Note: Unused comparators removed (ORDER_DATE_COMPARATOR, ORDER_PRIORITY_COMPARATOR)
+    // If custom ordering is needed in the future, comparators can be added back
     
     /**
      * Add order to appropriate queues based on user role and order status
@@ -287,16 +273,7 @@ public class OrderQueueManager {
     
     // Helper methods
     
-    private static int getOrderPriority(Order order) {
-        switch (order.getStatus().name()) {
-            case "PENDING": return 1;
-            case "PROCESSING": return 2;
-            case "SHIPPED": return 3;
-            case "DELIVERED": return 4;
-            case "CANCELLED": return 5;
-            default: return 6;
-        }
-    }
+    // Note: getOrderPriority() method removed as it was not used after comparator removal
     
     private static boolean isOrderCompleted(Order order) {
         String status = order.getStatus().name();

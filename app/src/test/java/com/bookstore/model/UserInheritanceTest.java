@@ -17,8 +17,8 @@ public class UserInheritanceTest {
         System.out.println("User Type: " + admin.getUserType());
         System.out.println("Is Admin: " + admin.isAdmin());
         System.out.println("Is Customer: " + admin.isCustomer());
-        System.out.println("Can Manage Users: " + admin.canManageUsers());
-        System.out.println("Can Manage Books: " + admin.canManageBooks());
+        System.out.println("Has USER_MANAGEMENT permission: " + admin.hasPermission("USER_MANAGEMENT"));
+        System.out.println("Has BOOK_MANAGEMENT permission: " + admin.hasPermission("BOOK_MANAGEMENT"));
         System.out.println("Has USER_MANAGEMENT permission: " + admin.hasPermission("USER_MANAGEMENT"));
         System.out.println("Admin Details: " + admin.toString());
         System.out.println();
@@ -27,8 +27,7 @@ public class UserInheritanceTest {
         Customer customer = new Customer("customer1", "password123", "customer@email.com", "Jane", "Customer");
         customer.setAddress("123 Main St");
         customer.setPhoneNumber("555-1234");
-        customer.addOrderToHistory(1001);
-        customer.addOrderToHistory(1002);
+        // Order history is now managed by database - setting up basic customer info
         
         System.out.println("Customer Test:");
         System.out.println("User Type: " + customer.getUserType());
@@ -38,7 +37,7 @@ public class UserInheritanceTest {
         System.out.println("Can View Books: " + customer.canViewBooks());
         System.out.println("Has VIEW_BOOKS permission: " + customer.hasPermission("VIEW_BOOKS"));
         System.out.println("Has USER_MANAGEMENT permission: " + customer.hasPermission("USER_MANAGEMENT"));
-        System.out.println("Total Orders: " + customer.getTotalOrders());
+        System.out.println("Order History Size: " + customer.getOrderHistory().size());
         System.out.println("Customer Details: " + customer.toString());
         System.out.println();
         

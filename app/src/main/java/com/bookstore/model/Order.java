@@ -135,6 +135,31 @@ public class Order {
         this.notes = notes;
     }
 
+    // Utility methods
+    public boolean isPending() {
+        return status == OrderStatus.PENDING;
+    }
+
+    public boolean isProcessing() {
+        return status == OrderStatus.PROCESSING;
+    }
+
+    public boolean isShipped() {
+        return status == OrderStatus.SHIPPED;
+    }
+
+    public boolean isDelivered() {
+        return status == OrderStatus.DELIVERED;
+    }
+
+    public boolean isCancelled() {
+        return status == OrderStatus.CANCELLED;
+    }
+
+    public int getTotalItems() {
+        return orderItems != null ? orderItems.stream().mapToInt(OrderItem::getQuantity).sum() : 0;
+    }
+
     @Override
     public String toString() {
         return "Order {" +
@@ -145,7 +170,7 @@ public class Order {
                 ", totalAmount=" + totalAmount +
                 ", status=" + status +
                 ", trackingNumber='" + trackingNumber + '\'' +
-                ", orderItems=" + orderItems +
+                ", itemCount=" + (orderItems != null ? orderItems.size() : 0) +
                 '}';
     }
 }

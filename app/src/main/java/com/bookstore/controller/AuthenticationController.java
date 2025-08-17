@@ -5,9 +5,9 @@ import com.bookstore.dao.UserDAO;
 import com.bookstore.model.Customer;
 import com.bookstore.model.User;
 import com.bookstore.service.AuthService;
-import com.bookstore.util.DisplayFormatter;
-import com.bookstore.util.InputValidator;
-import com.bookstore.util.PasswordUtil;
+import com.bookstore.util.ui.DisplayFormatter;
+import com.bookstore.util.ui.InputValidator;
+import com.bookstore.util.security.PasswordUtil;
 
 import java.util.List;
 
@@ -491,8 +491,8 @@ public class AuthenticationController {
     public void changePassword() {
         System.out.println("=== CHANGE PASSWORD ===");
 
-        String currentPassword = InputValidator.getStringInput("Current Password: ");
-        String newPassword = InputValidator.getStringInput("New Password: ");
+        String currentPassword = InputValidator.getMaskedPassword("Current Password: ");
+        String newPassword = InputValidator.getMaskedPassword("New Password: ");
 
         if (!PasswordUtil.isPasswordStrong(newPassword)) {
             System.out.println("Password is not strong enough.");
@@ -500,7 +500,7 @@ public class AuthenticationController {
             return;
         }
 
-        String confirmPassword = InputValidator.getStringInput("Confirm New Password: ");
+        String confirmPassword = InputValidator.getMaskedPassword("Confirm New Password: ");
 
         if (!newPassword.equals(confirmPassword)) {
             System.out.println("Passwords do not match.");

@@ -215,7 +215,7 @@ public class QueueService {
      * Get overall queue statistics (admin only)
      */
     public OrderQueueManager.QueueStatistics getOverallQueueStats(User user) {
-        if (user == null || user.getRole() != Role.ADMIN) {
+        if (!isAdmin(user)) {
             throw new SecurityException("Admin access required for overall queue statistics");
         }
         
@@ -264,7 +264,7 @@ public class QueueService {
      * Clear user's queue (admin operation)
      */
     public boolean clearUserQueue(int userId, User admin) {
-        if (admin == null || admin.getRole() != Role.ADMIN) {
+        if (!isAdmin(admin)) {
             System.err.println("Admin access required to clear user queues");
             return false;
         }
@@ -279,7 +279,7 @@ public class QueueService {
      * Clear all queues (admin operation)
      */
     public boolean clearAllQueues(User admin) {
-        if (admin == null || admin.getRole() != Role.ADMIN) {
+        if (!isAdmin(admin)) {
             System.err.println("Admin access required to clear all queues");
             return false;
         }
@@ -294,7 +294,7 @@ public class QueueService {
      * Get pending orders (admin view)
      */
     public List<Order> getPendingOrders(User user) {
-        if (user == null || user.getRole() != Role.ADMIN) {
+        if (!isAdmin(user)) {
             throw new SecurityException("Admin access required for pending orders view");
         }
         
@@ -305,56 +305,30 @@ public class QueueService {
      * Get completed orders (admin view)
      */
     public List<Order> getCompletedOrders(User user) {
-        if (user == null || user.getRole() != Role.ADMIN) {
+        if (!isAdmin(user)) {
             throw new SecurityException("Admin access required for completed orders view");
         }
         
         return OrderQueueManager.getCompletedQueue().toList();
     }
     
-    /**
-     * Reassign order to different user (admin operation)
-     */
-    public boolean reassignOrder(Order order, int newUserId, User admin) {
-        if (admin == null || admin.getRole() != Role.ADMIN) {
-            System.err.println("Admin access required to reassign orders");
-            return false;
-        }
-        
-        if (order == null) {
-            return false;
-        }
-        
-        try {
-            // Update order's assigned user
-            order.setUserId(newUserId);
-            
-            // Update in database (you might need to add this method to OrderDAO)
-            // orderDAO.updateOrderAssignedUser(order.getOrderId(), newUserId);
-            
-            // Update queues
-            OrderQueueManager.updateOrderInQueues(order);
-            
-            System.out.println("Order " + order.getOrderId() + " reassigned to user " + newUserId + " by admin " + admin.getUsername());
-            
-            return true;
-            
-        } catch (Exception e) {
-            System.err.println("Error reassigning order: " + e.getMessage());
-            return false;
-        }
-    }
+    // Note: reassignOrder() method removed as it had incomplete implementation
+    // If needed, this functionality should be implemented with proper DAO support
     
-    // Helper method for logging queue operations
+    // Helper methods
+    private boolean isAdmin(User user) {
+        return user != null && user.getRole() == Role.ADMIN;
+    }
+
     private void logQueueOperation(String operation, Order order, User user) {
         String logMessage = String.format("[QUEUE] %s - Order: %d, User: %s (%s), Status: %s",
-            operation, 
-            order.getOrderId(), 
-            user.getUsername(), 
+            operation,
+            order.getOrderId(),
+            user.getUsername(),
             user.getRole(),
             order.getStatus()
         );
-        
+
         System.out.println(logMessage);
         // In a real system, you might want to log this to a file or database
     }
