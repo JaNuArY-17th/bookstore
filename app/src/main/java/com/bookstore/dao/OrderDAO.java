@@ -247,4 +247,84 @@ public class OrderDAO {
         }
         return orders;
     }
+
+    /**
+     * Delete order and its associated order items
+     * @param orderId The order ID to delete
+     * @return True if deletion successful, false otherwise
+     */
+    public boolean deleteOrder(int orderId) {
+        String sqlOrderItems = "DELETE FROM OrderItems WHERE order_id = ?";
+        String sqlOrder = "DELETE FROM Orders WHERE order_id = ?";
+
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Start transaction
+
+            // First delete order items
+            try (PreparedStatement pstmtItems = conn.prepareStatement(sqlOrderItems)) {
+                pstmtItems.setInt(1, orderId);
+                pstmtItems.executeUpdate();
+            }
+
+            // Then delete the order
+            try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder)) {
+                pstmtOrder.setInt(1, orderId);
+                int rowsAffected = pstmtOrder.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    conn.commit();
+                    return true;
+                } else {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error deleting order: " + e.getMessage());
+            // Rollback if error
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    System.err.println("Error during rollback: " + rollbackEx.getMessage());
+                }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true); // Reset auto-commit
+                    conn.close();
+                } catch (SQLException closeEx) {
+                    System.err.println("Error closing connection: " + closeEx.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * Update order information
+     * @param order The order with updated information
+     * @return True if update successful, false otherwise
+     */
+    public boolean updateOrder(Order order) {
+        String sql = "UPDATE Orders SET customer_id = ?, total_amount = ?, status = ? WHERE order_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, order.getCustomerId());
+            pstmt.setDouble(2, order.getTotalAmount());
+            pstmt.setString(3, order.getStatus().name());
+            pstmt.setInt(4, order.getOrderId());
+
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating order: " + e.getMessage());
+            return false;
+        }
+    }
 }

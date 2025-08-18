@@ -2,6 +2,7 @@ package com.bookstore.controller;
 
 import com.bookstore.dao.CustomerDAO;
 import com.bookstore.model.Customer;
+import com.bookstore.service.CustomerService;
 import com.bookstore.util.ui.DisplayFormatter;
 import com.bookstore.util.ui.InputValidator;
 
@@ -13,9 +14,11 @@ import java.util.List;
  */
 public class CustomerManagementController {
     private CustomerDAO customerDAO;
+    private CustomerService customerService;
 
-    public CustomerManagementController(CustomerDAO customerDAO) {
+    public CustomerManagementController(CustomerDAO customerDAO, CustomerService customerService) {
         this.customerDAO = customerDAO;
+        this.customerService = customerService;
     }
 
     /**

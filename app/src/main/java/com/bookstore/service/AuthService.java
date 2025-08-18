@@ -14,10 +14,12 @@ public class AuthService {
     private UserDAO userDAO;
     private User currentUser;
     private CartService cartService;
+    private SessionDataManager sessionManager;
 
     public AuthService() {
         this.userDAO = new UserDAO();
         this.cartService = new CartService();
+        this.sessionManager = new SessionDataManager();
     }
 
     /**
@@ -25,21 +27,45 @@ public class AuthService {
      */
     public boolean login(String username, String password) {
         User user = userDAO.getUserByUsername(username);
-        
+
         if (user != null && PasswordUtil.verifyPassword(password, user.getPassword())) {
             this.currentUser = user;
             userDAO.updateLastLogin(user.getUserId());
+
+            // Initialize session data and queues
+            initializeUserSession(user);
+
             return true;
         }
         return false;
     }
 
     /**
+     * Initialize user session with cached data and queue integration
+     */
+    private void initializeUserSession(User user) {
+        try {
+            sessionManager.initializeUserSession(user);
+            System.out.println("Session initialized successfully for: " + user.getUsername());
+        } catch (Exception e) {
+            System.err.println("Error initializing session: " + e.getMessage());
+            // Continue with login even if session initialization fails
+        }
+    }
+
+    /**
      * Logout current user
      */
     public void logout() {
+        // Clear session data and queues
+        if (sessionManager != null) {
+            sessionManager.clearSession();
+        }
+
         this.currentUser = null;
         this.cartService.clearCart(); // Clear cart on logout
+
+        System.out.println("User logged out and session cleared");
     }
 
     /**
@@ -183,5 +209,13 @@ public class AuthService {
      */
     public CartService getCartService() {
         return cartService;
+    }
+
+    /**
+     * Get session data manager for accessing cached data
+     * @return SessionDataManager instance
+     */
+    public SessionDataManager getSessionDataManager() {
+        return sessionManager;
     }
 }

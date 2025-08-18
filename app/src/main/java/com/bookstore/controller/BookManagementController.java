@@ -2,6 +2,7 @@ package com.bookstore.controller;
 
 import com.bookstore.dao.BookDAO;
 import com.bookstore.model.Book;
+import com.bookstore.service.BookService;
 import com.bookstore.util.ui.DisplayFormatter;
 import com.bookstore.util.ui.InputValidator;
 import com.bookstore.util.ui.PaginationUtil;
@@ -15,9 +16,11 @@ import java.util.List;
  */
 public class BookManagementController {
     private BookDAO bookDAO;
+    private BookService bookService;
 
-    public BookManagementController(BookDAO bookDAO) {
+    public BookManagementController(BookDAO bookDAO, BookService bookService) {
         this.bookDAO = bookDAO;
+        this.bookService = bookService;
     }
 
     /**
@@ -83,7 +86,9 @@ public class BookManagementController {
         int stock = InputValidator.getIntInput("Stock Quantity: ");
 
         Book book = new Book(0, title, author, isbn, price, stock);
-        int bookId = bookDAO.addBook(book);
+        // Note: Need to get current user for admin check
+        // For now, assume admin access since this is admin menu
+        int bookId = bookDAO.addBook(book); // Keep using DAO for now until we have user context
 
         if (bookId != -1) {
             System.out.println("Book added successfully with ID: " + bookId);
@@ -102,7 +107,7 @@ public class BookManagementController {
         while (true) {
             System.out.println("\n=== ALL BOOKS ===");
             try {
-                List<Book> allBooks = bookDAO.getAllBooks();
+                List<Book> allBooks = bookService.getAllBooks();
                 if (allBooks.isEmpty()) {
                     System.out.println("No books available.");
                     System.out.println("\nPress Enter to continue...");
@@ -173,7 +178,7 @@ public class BookManagementController {
      */
     public void searchBookById() {
         int bookId = InputValidator.getIntInput("Enter Book ID: ");
-        Book book = bookDAO.getBookById(bookId);
+        Book book = bookService.getBookById(bookId);
 
         if (book != null) {
             System.out.println("Book found:");
@@ -203,7 +208,7 @@ public class BookManagementController {
      */
     public void updateBook() {
         int bookId = InputValidator.getIntInput("Enter Book ID to update: ");
-        Book book = bookDAO.getBookById(bookId);
+        Book book = bookService.getBookById(bookId);
 
         if (book == null) {
             System.out.println("Book not found with ID: " + bookId);
@@ -259,7 +264,7 @@ public class BookManagementController {
      */
     public void deleteBook() {
         int bookId = InputValidator.getIntInput("Enter Book ID to delete: ");
-        Book book = bookDAO.getBookById(bookId);
+        Book book = bookService.getBookById(bookId);
 
         if (book == null) {
             System.out.println("Book not found with ID: " + bookId);
@@ -299,7 +304,7 @@ public class BookManagementController {
      */
     public void demonstrateSorting() {
         System.out.println("=== SORTING DEMONSTRATION ===");
-        List<Book> books = bookDAO.getAllBooks();
+        List<Book> books = bookService.getAllBooks();
 
         if (books.isEmpty()) {
             System.out.println("No books available for sorting demonstration.");

@@ -10,6 +10,7 @@ import com.bookstore.model.OrderItem;
 import com.bookstore.model.User;
 import com.bookstore.service.AuthService;
 import com.bookstore.service.OrderService;
+import com.bookstore.service.BookService;
 import com.bookstore.util.ui.DisplayFormatter;
 import com.bookstore.util.ui.InputValidator;
 import com.bookstore.util.ui.PaginationUtil;
@@ -27,14 +28,16 @@ public class OrderManagementController {
     private CustomerDAO customerDAO;
     private OrderService orderService;
     private AuthService authService;
+    private BookService bookService;
 
     public OrderManagementController(OrderDAO orderDAO, BookDAO bookDAO, CustomerDAO customerDAO,
-            OrderService orderService, AuthService authService) {
+            OrderService orderService, AuthService authService, BookService bookService) {
         this.orderDAO = orderDAO;
         this.bookDAO = bookDAO;
         this.customerDAO = customerDAO;
         this.orderService = orderService;
         this.authService = authService;
+        this.bookService = bookService;
     }
 
     /**
@@ -101,7 +104,7 @@ public class OrderManagementController {
         }
 
         // Show available books
-        List<Book> books = bookDAO.getAllBooks();
+        List<Book> books = bookService.getAllBooks();
         if (books.isEmpty()) {
             System.out.println("No books available.");
             return;
@@ -128,7 +131,7 @@ public class OrderManagementController {
                 continue;
             }
 
-            Book book = bookDAO.getBookById(bookId);
+            Book book = bookService.getBookById(bookId);
             if (book == null) {
                 System.out.println("Invalid book ID.");
                 continue;
@@ -189,7 +192,7 @@ public class OrderManagementController {
             if (!items.isEmpty()) {
                 System.out.println("Order Items:");
                 for (OrderItem item : items) {
-                    Book book = bookDAO.getBookById(item.getBookId());
+                    Book book = bookService.getBookById(item.getBookId());
                     System.out.printf("- %s x %d @ $%.2f each%n",
                             book != null ? book.getTitle() : "Unknown Book",
                             item.getQuantity(),
@@ -220,7 +223,7 @@ public class OrderManagementController {
         while (true) {
             System.out.println("\n=== BROWSE BOOKS ===");
             try {
-                List<Book> allBooks = bookDAO.getAllBooks();
+                List<Book> allBooks = bookService.getAllBooks();
                 if (allBooks.isEmpty()) {
                     System.out.println("No books available.");
                     System.out.println("\nPress Enter to continue...");
@@ -312,7 +315,7 @@ public class OrderManagementController {
      */
     private void viewBookDetailsCustomer() {
         int bookId = InputValidator.getIntInput("Enter Book ID to view details: ");
-        Book book = bookDAO.getBookById(bookId);
+        Book book = bookService.getBookById(bookId);
 
         if (book == null) {
             System.out.println("Book not found with ID: " + bookId);
@@ -453,7 +456,7 @@ public class OrderManagementController {
         // Validate stock availability
         boolean allItemsAvailable = true;
         for (OrderItem item : cartItems) {
-            Book book = bookDAO.getBookById(item.getBookId());
+            Book book = bookService.getBookById(item.getBookId());
             if (book == null || book.getStockQuantity() < item.getQuantity()) {
                 System.out.println("Warning: " + (book != null ? book.getTitle() : "Unknown book") +
                                  " has insufficient stock.");
@@ -498,7 +501,7 @@ public class OrderManagementController {
      */
     private void addBookToCartFromBrowse() {
         int bookId = InputValidator.getIntInput("Enter Book ID to add to cart: ");
-        Book book = bookDAO.getBookById(bookId);
+        Book book = bookService.getBookById(bookId);
 
         if (book == null) {
             System.out.println("Book not found with ID: " + bookId);
@@ -541,7 +544,7 @@ public class OrderManagementController {
             }
 
             try {
-                List<Book> searchResults = bookDAO.searchBooks(searchTerm);
+                List<Book> searchResults = bookService.search(searchTerm);
                 if (searchResults.isEmpty()) {
                     System.out.println("No books found matching: " + searchTerm);
                     continue;
@@ -742,7 +745,7 @@ public class OrderManagementController {
         }
 
         // Show available books
-        List<Book> books = bookDAO.getAllBooks();
+        List<Book> books = bookService.getAllBooks();
         if (books.isEmpty()) {
             System.out.println("No books available for purchase at the moment.");
             return;
@@ -777,7 +780,7 @@ public class OrderManagementController {
                 continue;
             }
 
-            Book book = bookDAO.getBookById(bookId);
+            Book book = bookService.getBookById(bookId);
             if (book == null) {
                 System.out.println("Invalid book ID. Please try again.");
                 continue;
@@ -1528,7 +1531,7 @@ public class OrderManagementController {
      */
     private void demonstrateSorting() {
         System.out.println("=== SORTING DEMONSTRATION ===");
-        List<Book> books = bookDAO.getAllBooks();
+        List<Book> books = bookService.getAllBooks();
 
         if (books.isEmpty()) {
             System.out.println("No books available for sorting demonstration.");

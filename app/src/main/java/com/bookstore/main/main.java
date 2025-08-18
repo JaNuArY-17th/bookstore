@@ -11,6 +11,9 @@ import com.bookstore.dao.OrderDAO;
 import com.bookstore.dao.UserDAO;
 import com.bookstore.service.AuthService;
 import com.bookstore.service.OrderService;
+import com.bookstore.service.BookService;
+import com.bookstore.service.CustomerService;
+import com.bookstore.service.SessionDataManager;
 import com.bookstore.util.database.DatabaseInitializer;
 import com.bookstore.util.database.DatabaseTestUtil;
 
@@ -31,8 +34,10 @@ public class Main {
     private static UserDAO userDAO = new UserDAO();
     
     // Services
-    private static OrderService orderService = new OrderService();
     private static AuthService authService = new AuthService();
+    private static OrderService orderService = new OrderService();
+    private static BookService bookService;
+    private static CustomerService customerService;
     
     // Controllers
     private static BookManagementController bookController;
@@ -74,12 +79,30 @@ public class Main {
      * Initialize all controller components
      */
     private static void initializeControllers() {
+        // Initialize services with session data manager
+        initializeServices();
+
         // Initialize controllers with their dependencies
-        bookController = new BookManagementController(bookDAO);
-        customerController = new CustomerManagementController(customerDAO);
-        orderController = new OrderManagementController(orderDAO, bookDAO, customerDAO, orderService, authService);
+        bookController = new BookManagementController(bookDAO, bookService);
+        customerController = new CustomerManagementController(customerDAO, customerService);
+        orderController = new OrderManagementController(orderDAO, bookDAO, customerDAO, orderService, authService, bookService);
         authController = new AuthenticationController(authService, userDAO, customerDAO);
         menuManager = new MenuManager(authService, bookController, customerController, orderController, authController);
+    }
+
+    /**
+     * Initialize services with session data manager
+     */
+    private static void initializeServices() {
+        // Get session data manager from auth service
+        SessionDataManager sessionManager = authService.getSessionDataManager();
+
+        // Initialize services with session manager
+        bookService = new BookService(sessionManager);
+        customerService = new CustomerService(sessionManager);
+
+        // Update order service to use session manager
+        orderService = new OrderService(sessionManager);
     }
 
     /**

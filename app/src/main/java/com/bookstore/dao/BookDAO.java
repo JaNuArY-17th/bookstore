@@ -191,32 +191,5 @@ public class BookDAO {
         return books;
     }
 
-    public List<Book> searchBooks(String searchTerm) {
-        List<Book> books = new ArrayList<>();
-        String sql = "SELECT * FROM Books WHERE title LIKE ? OR author LIKE ? OR isbn LIKE ?";
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            String searchPattern = "%" + searchTerm + "%";
-            pstmt.setString(1, searchPattern);
-            pstmt.setString(2, searchPattern);
-            pstmt.setString(3, searchPattern);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    Book book = new Book();
-                    book.setBookId(rs.getInt("book_id"));
-                    book.setTitle(rs.getString("title"));
-                    book.setAuthor(rs.getString("author"));
-                    book.setIsbn(rs.getString("isbn"));
-                    book.setPrice(rs.getDouble("price"));
-                    book.setStockQuantity(rs.getInt("stock_quantity"));
-                    books.add(book);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error searching books: " + e.getMessage());
-        }
-        return books;
-    }
 }
