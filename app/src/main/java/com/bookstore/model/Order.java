@@ -21,40 +21,7 @@ public class Order {
     public Order() {
     }
 
-    // Constructor for creating new orders (without ID - for AUTO_INCREMENT)
-    public Order(int customerId, Date orderDate, double totalAmount, OrderStatus status, List<OrderItem> orderItems) {
-        this.orderId = 0; // Will be set by database AUTO_INCREMENT
-        this.customerId = customerId;
-        this.orderDate = orderDate;
-        this.totalAmount = totalAmount;
-        this.status = status;
-        this.orderItems = orderItems;
-    }
-
-    // Constructor for creating new orders with user ID (without order ID - for AUTO_INCREMENT)
-    public Order(int customerId, int userId, Date orderDate, double totalAmount, OrderStatus status,
-                String trackingNumber, List<OrderItem> orderItems) {
-        this.orderId = 0; // Will be set by database AUTO_INCREMENT
-        this.customerId = customerId;
-        this.userId = userId;
-        this.orderDate = orderDate;
-        this.totalAmount = totalAmount;
-        this.status = status;
-        this.trackingNumber = trackingNumber;
-        this.orderItems = orderItems;
-    }
-
-    // Constructor for existing orders (with ID - from database)
-    public Order(int orderId, int customerId, Date orderDate, double totalAmount, OrderStatus status, List<OrderItem> orderItems) {
-        this.orderId = orderId;
-        this.customerId = customerId;
-        this.orderDate = orderDate;
-        this.totalAmount = totalAmount;
-        this.status = status;
-        this.orderItems = orderItems;
-    }
-
-    // Constructor for existing orders with user ID (with ID - from database)
+    // Master constructor - all fields
     public Order(int orderId, int customerId, int userId, Date orderDate, double totalAmount, OrderStatus status,
                 String trackingNumber, List<OrderItem> orderItems) {
         this.orderId = orderId;
@@ -65,6 +32,22 @@ public class Order {
         this.status = status;
         this.trackingNumber = trackingNumber;
         this.orderItems = orderItems;
+    }
+
+    // Constructor for new orders (AUTO_INCREMENT) - with user ID and tracking
+    public Order(int customerId, int userId, Date orderDate, double totalAmount, OrderStatus status,
+                String trackingNumber, List<OrderItem> orderItems) {
+        this(0, customerId, userId, orderDate, totalAmount, status, trackingNumber, orderItems);
+    }
+
+    // Constructor for new orders (AUTO_INCREMENT) - basic
+    public Order(int customerId, Date orderDate, double totalAmount, OrderStatus status, List<OrderItem> orderItems) {
+        this(0, customerId, 0, orderDate, totalAmount, status, null, orderItems);
+    }
+
+    // Constructor for existing orders (from database) - basic
+    public Order(int orderId, int customerId, Date orderDate, double totalAmount, OrderStatus status, List<OrderItem> orderItems) {
+        this(orderId, customerId, 0, orderDate, totalAmount, status, null, orderItems);
     }
 
     // Getters and Setters

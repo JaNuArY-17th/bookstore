@@ -12,10 +12,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Service class for Book operations
- * Handles business logic for book management using cached data
- */
 public class BookService {
     
     private SessionDataManager sessionManager;

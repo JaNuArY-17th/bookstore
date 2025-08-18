@@ -13,22 +13,18 @@ public class OrderItem {
     public OrderItem() {
     }
 
-    // Constructor for creating new order items (without IDs - for AUTO_INCREMENT)
-    public OrderItem(int bookId, int quantity, double unitPrice) {
-        this.orderItemId = 0; // Will be set by database AUTO_INCREMENT
-        this.orderId = 0; // Will be set when order is created
-        this.bookId = bookId;
-        this.quantity = quantity;
-        this.unitPrice = unitPrice;
-    }
-
-    // Constructor for existing order items (with IDs - from database)
+    // Master constructor - all fields
     public OrderItem(int orderItemId, int orderId, int bookId, int quantity, double unitPrice) {
         this.orderItemId = orderItemId;
         this.orderId = orderId;
         this.bookId = bookId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
+    }
+
+    // Constructor for new order items (AUTO_INCREMENT)
+    public OrderItem(int bookId, int quantity, double unitPrice) {
+        this(0, 0, bookId, quantity, unitPrice); // Chain to master constructor
     }
 
     // Getters and Setters

@@ -9,44 +9,11 @@ public class Book {
     private int stockQuantity;
     private String category;
 
-    // Constructor
+    // Default constructor
     public Book() {
     }
 
-    // Constructor for creating new books (without ID - for AUTO_INCREMENT)
-    public Book(String title, String author, String isbn, double price, int stockQuantity) {
-        this.bookId = 0; // Will be set by database AUTO_INCREMENT
-        this.title = title;
-        this.author = author;
-        this.isbn = isbn;
-        this.price = price;
-        this.stockQuantity = stockQuantity;
-        this.category = null; // Default to null
-    }
-
-    // Constructor for creating new books with category (without ID - for AUTO_INCREMENT)
-    public Book(String title, String author, String isbn, double price, int stockQuantity, String category) {
-        this.bookId = 0; // Will be set by database AUTO_INCREMENT
-        this.title = title;
-        this.author = author;
-        this.isbn = isbn;
-        this.price = price;
-        this.stockQuantity = stockQuantity;
-        this.category = category;
-    }
-
-    // Constructor for existing books (with ID - from database)
-    public Book(int bookId, String title, String author, String isbn, double price, int stockQuantity) {
-        this.bookId = bookId;
-        this.title = title;
-        this.author = author;
-        this.isbn = isbn;
-        this.price = price;
-        this.stockQuantity = stockQuantity;
-        this.category = null; // Default to null
-    }
-
-    // Constructor for existing books with category (with ID - from database)
+    // Master constructor - all fields
     public Book(int bookId, String title, String author, String isbn, double price, int stockQuantity, String category) {
         this.bookId = bookId;
         this.title = title;
@@ -55,6 +22,21 @@ public class Book {
         this.price = price;
         this.stockQuantity = stockQuantity;
         this.category = category;
+    }
+
+    // Constructor for new books (AUTO_INCREMENT) - with category
+    public Book(String title, String author, String isbn, double price, int stockQuantity, String category) {
+        this(0, title, author, isbn, price, stockQuantity, category); // Chain to master constructor
+    }
+
+    // Constructor for new books (AUTO_INCREMENT) - without category
+    public Book(String title, String author, String isbn, double price, int stockQuantity) {
+        this(title, author, isbn, price, stockQuantity, null); // Chain with null category
+    }
+
+    // Constructor for existing books (from database) - without category
+    public Book(int bookId, String title, String author, String isbn, double price, int stockQuantity) {
+        this(bookId, title, author, isbn, price, stockQuantity, null); // Chain with null category
     }
 
     // Getters and Setters
