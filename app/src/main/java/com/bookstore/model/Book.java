@@ -7,11 +7,35 @@ public class Book {
     private String isbn;
     private double price;
     private int stockQuantity;
+    private String category;
 
     // Constructor
     public Book() {
     }
 
+    // Constructor for creating new books (without ID - for AUTO_INCREMENT)
+    public Book(String title, String author, String isbn, double price, int stockQuantity) {
+        this.bookId = 0; // Will be set by database AUTO_INCREMENT
+        this.title = title;
+        this.author = author;
+        this.isbn = isbn;
+        this.price = price;
+        this.stockQuantity = stockQuantity;
+        this.category = null; // Default to null
+    }
+
+    // Constructor for creating new books with category (without ID - for AUTO_INCREMENT)
+    public Book(String title, String author, String isbn, double price, int stockQuantity, String category) {
+        this.bookId = 0; // Will be set by database AUTO_INCREMENT
+        this.title = title;
+        this.author = author;
+        this.isbn = isbn;
+        this.price = price;
+        this.stockQuantity = stockQuantity;
+        this.category = category;
+    }
+
+    // Constructor for existing books (with ID - from database)
     public Book(int bookId, String title, String author, String isbn, double price, int stockQuantity) {
         this.bookId = bookId;
         this.title = title;
@@ -19,6 +43,18 @@ public class Book {
         this.isbn = isbn;
         this.price = price;
         this.stockQuantity = stockQuantity;
+        this.category = null; // Default to null
+    }
+
+    // Constructor for existing books with category (with ID - from database)
+    public Book(int bookId, String title, String author, String isbn, double price, int stockQuantity, String category) {
+        this.bookId = bookId;
+        this.title = title;
+        this.author = author;
+        this.isbn = isbn;
+        this.price = price;
+        this.stockQuantity = stockQuantity;
+        this.category = category;
     }
 
     // Getters and Setters
@@ -70,6 +106,14 @@ public class Book {
         this.stockQuantity = Math.max(0, stockQuantity); // Ensure non-negative stock
     }
 
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
     // Utility methods
     public boolean isInStock() {
         return stockQuantity > 0;
@@ -88,6 +132,7 @@ public class Book {
                 ", isbn='" + isbn + '\'' +
                 ", price=" + price +
                 ", stockQuantity=" + stockQuantity +
+                ", category='" + category + '\'' +
                 '}';
     }
 }

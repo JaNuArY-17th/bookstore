@@ -7,6 +7,7 @@ import com.bookstore.model.Book;
 import com.bookstore.model.Customer;
 import com.bookstore.model.Order;
 import com.bookstore.model.OrderItem;
+import com.bookstore.model.OrderStatus;
 import com.bookstore.model.User;
 import com.bookstore.service.AuthService;
 import com.bookstore.service.OrderService;
@@ -49,7 +50,10 @@ public class OrderManagementController {
             System.out.println("1. Create New Order");
             System.out.println("2. View All Orders");
             System.out.println("3. Search Order by ID");
-            // System.out.println("4. View Order Queue Status");
+            System.out.println("4. Advanced Search Orders");
+            System.out.println("5. Sort Orders");
+            System.out.println("6. Filter Orders by Status");
+            // System.out.println("7. View Order Queue Status");
             System.out.println("0. Back to Main Menu");
 
             int choice = InputValidator.getIntInput("Enter your choice: ");
@@ -64,7 +68,16 @@ public class OrderManagementController {
                 case 3:
                     searchOrderById();
                     break;
-                // case 4:
+                case 4:
+                    advancedSearchOrders();
+                    break;
+                case 5:
+                    sortOrders();
+                    break;
+                case 6:
+                    filterOrdersByStatus();
+                    break;
+                // case 7:
                 //     viewOrderQueueStatus();
                 //     break;
                 case 0:
@@ -143,7 +156,7 @@ public class OrderManagementController {
                 continue;
             }
 
-            OrderItem item = new OrderItem(0, 0, bookId, quantity, book.getPrice());
+            OrderItem item = new OrderItem(bookId, quantity, book.getPrice());
             orderItems.add(item);
             System.out.println("Added: " + quantity + " x " + book.getTitle());
         }
@@ -260,8 +273,9 @@ public class OrderManagementController {
                 System.out.println("1. View Book Details");
                 System.out.println("2. Add Book to Cart");
                 System.out.println("3. Search Books");
-                System.out.println("4. View Cart (" + authService.getCartService().getItemCount() + " items)");
-                System.out.println("5. Refresh Book List");
+                System.out.println("4. Filter Books by Category");
+                System.out.println("5. View Cart (" + authService.getCartService().getItemCount() + " items)");
+                System.out.println("6. Refresh Book List");
                 System.out.println("0. Back to Customer Menu");
 
                 String input = InputValidator.getStringInput("Enter your choice (or navigation command): ");
@@ -291,9 +305,12 @@ public class OrderManagementController {
                             showCustomerSearchBooks();
                             break;
                         case 4:
-                            showCartManagement();
+                            showCustomerFilterBooks();
                             break;
                         case 5:
+                            showCartManagement();
+                            break;
+                        case 6:
                             currentPage = 1; // Reset to first page on refresh
                             break;
                         case 0:
@@ -306,6 +323,154 @@ public class OrderManagementController {
                 }
             } catch (Exception e) {
                 System.out.println("Error retrieving books: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Show customer filter books interface
+     */
+    public void showCustomerFilterBooks() {
+        System.out.println("=== FILTER BOOKS BY CATEGORY ===");
+
+        try {
+            // Get all available categories
+            List<String> categories = bookService.getAllCategories();
+
+            if (categories.isEmpty()) {
+                System.out.println("No categories available.");
+                System.out.println("\nPress Enter to continue...");
+                InputValidator.getStringInput("");
+                return;
+            }
+
+            // Display available categories
+            System.out.println("Available categories:");
+            for (int i = 0; i < categories.size(); i++) {
+                System.out.println((i + 1) + ". " + categories.get(i));
+            }
+            System.out.println("0. Cancel");
+
+            int choice = InputValidator.getIntInput("Enter your choice: ");
+
+            if (choice == 0) {
+                return;
+            }
+
+            if (choice < 1 || choice > categories.size()) {
+                System.out.println("Invalid choice.");
+                return;
+            }
+
+            String selectedCategory = categories.get(choice - 1);
+            boolean ascending = InputValidator.getConfirmation("Sort results in ascending order? (y/n): ");
+
+            List<Book> filteredBooks = bookService.filter(selectedCategory, ascending);
+
+            if (filteredBooks.isEmpty()) {
+                System.out.println("No books found in category: " + selectedCategory);
+            } else {
+                System.out.println("\n=== FILTERED BOOKS ===");
+                System.out.println("Books in category '" + selectedCategory + "' (" + filteredBooks.size() + " books):");
+
+                // Show filtered results with pagination and customer options
+                showPaginatedFilteredResults(filteredBooks, selectedCategory);
+            }
+        } catch (Exception e) {
+            System.out.println("Error filtering books: " + e.getMessage());
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        InputValidator.getStringInput("");
+    }
+
+    /**
+     * Show paginated filtered results for customers
+     */
+    private void showPaginatedFilteredResults(List<Book> filteredBooks, String category) {
+        int currentPage = 1;
+        final int PAGE_SIZE = 10;
+
+        while (true) {
+            System.out.println("\n=== BOOKS IN CATEGORY: \"" + category.toUpperCase() + "\" ===");
+
+            // Calculate pagination
+            int totalPages = (int) Math.ceil((double) filteredBooks.size() / PAGE_SIZE);
+            int startIndex = (currentPage - 1) * PAGE_SIZE;
+            int endIndex = Math.min(startIndex + PAGE_SIZE, filteredBooks.size());
+
+            // Display current page of books
+            List<Book> currentPageBooks = filteredBooks.subList(startIndex, endIndex);
+
+            // Display pagination info
+            PaginationUtil.displayPaginationInfo(currentPage, totalPages, filteredBooks.size(), PAGE_SIZE);
+
+            // Display books table
+            System.out.printf("%-5s %-30s %-20s %-10s %-8s%n", "ID", "Title", "Author", "Price", "Stock");
+            System.out.println("=".repeat(80));
+
+            for (Book book : currentPageBooks) {
+                System.out.printf("%-5d %-30s %-20s $%-9.2f %-8d%n",
+                        book.getBookId(),
+                        InputValidator.truncate(book.getTitle(), 30),
+                        InputValidator.truncate(book.getAuthor(), 20),
+                        book.getPrice(),
+                        book.getStockQuantity());
+            }
+
+            // Display navigation and options
+            if (totalPages > 1) {
+                PaginationUtil.displayPaginationNavigation(currentPage, totalPages);
+            }
+
+            System.out.println("\n=== FILTER OPTIONS ===");
+            System.out.println("1. View Book Details");
+            System.out.println("2. Add Book to Cart");
+            System.out.println("3. View Cart (" + authService.getCartService().getItemCount() + " items)");
+            System.out.println("4. New Filter");
+            System.out.println("0. Back to Browse Menu");
+
+            String input = InputValidator.getStringInput("Enter your choice (or navigation command): ");
+
+            // Handle menu options first
+            try {
+                int choice = Integer.parseInt(input);
+                switch (choice) {
+                    case 1:
+                        viewBookDetailsCustomer();
+                        break;
+                    case 2:
+                        addBookToCartFromBrowse();
+                        break;
+                    case 3:
+                        showCartManagement();
+                        break;
+                    case 4:
+                        showCustomerFilterBooks(); // Start new filter
+                        return;
+                    case 0:
+                        return; // Return to browse menu
+                    default:
+                        System.out.println("Invalid choice.");
+                        continue;
+                }
+                continue; // Continue the loop after handling menu option
+            } catch (NumberFormatException e) {
+                // Not a number, try navigation commands
+            }
+
+            // Handle pagination navigation if not a menu option
+            int newPage = PaginationUtil.handleNavigationInput(input, currentPage, totalPages);
+            if (newPage > 0) {
+                currentPage = newPage;
+                continue;
+            } else if (newPage == -2) { // Go to page
+                int targetPage = InputValidator.getIntInput("Enter page number (1-" + totalPages + "): ");
+                currentPage = PaginationUtil.validatePageNumber(targetPage, totalPages);
+                continue;
+            } else {
+                System.out.println("Invalid input. Please enter a number or navigation command.");
+                continue;
             }
         }
     }
@@ -544,11 +709,17 @@ public class OrderManagementController {
             }
 
             try {
+                // Debug: Print the search term being used
+                System.out.println("DEBUG: Searching for: '" + searchTerm + "'");
+
                 List<Book> searchResults = bookService.search(searchTerm);
                 if (searchResults.isEmpty()) {
                     System.out.println("No books found matching: " + searchTerm);
                     continue;
                 }
+
+                // Debug: Print number of results found
+                System.out.println("DEBUG: Found " + searchResults.size() + " results for: '" + searchTerm + "'");
 
                 // Handle pagination for search results
                 showPaginatedSearchResults(searchResults, searchTerm);
@@ -565,6 +736,10 @@ public class OrderManagementController {
     private void showPaginatedSearchResults(List<Book> searchResults, String searchTerm) {
         int currentPage = 1;
         final int PAGE_SIZE = 10;
+
+        // Debug: Print the search term received in pagination
+        System.out.println("DEBUG: showPaginatedSearchResults called with searchTerm: '" + searchTerm + "'");
+        System.out.println("DEBUG: Number of search results: " + searchResults.size());
 
         while (true) {
             System.out.println("\n=== SEARCH RESULTS FOR: \"" + searchTerm + "\" ===");
@@ -824,7 +999,7 @@ public class OrderManagementController {
             }
 
             if (!bookExists) {
-                OrderItem item = new OrderItem(0, 0, bookId, quantity, book.getPrice());
+                OrderItem item = new OrderItem(bookId, quantity, book.getPrice());
                 orderItems.add(item);
                 System.out.println("Added to cart: " + quantity + " x " + book.getTitle());
             }
@@ -1568,5 +1743,149 @@ public class OrderManagementController {
         } else {
             System.out.println("Order not found with ID: " + orderId);
         }
+    }
+
+    /**
+     * Advanced search orders using OrderService
+     */
+    public void advancedSearchOrders() {
+        System.out.println("=== ADVANCED ORDER SEARCH ===");
+        String searchTerm = InputValidator.getTrimmedStringInput("Enter search term (order ID, customer ID, or tracking number): ");
+
+        if (searchTerm.isEmpty()) {
+            System.out.println("Search term cannot be empty.");
+            return;
+        }
+
+        try {
+            List<Order> searchResults = orderService.search(searchTerm);
+
+            if (searchResults.isEmpty()) {
+                System.out.println("No orders found matching: " + searchTerm);
+            } else {
+                System.out.println("\n=== SEARCH RESULTS ===");
+                System.out.println("Found " + searchResults.size() + " order(s) matching: " + searchTerm);
+                DisplayFormatter.displayOrdersTable(searchResults);
+            }
+        } catch (Exception e) {
+            System.out.println("Error performing search: " + e.getMessage());
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        InputValidator.getStringInput("");
+    }
+
+    /**
+     * Sort orders using OrderService
+     */
+    public void sortOrders() {
+        System.out.println("=== SORT ORDERS ===");
+        System.out.println("Sort by:");
+        System.out.println("1. Order ID");
+        System.out.println("2. Order Date");
+        System.out.println("3. Total Amount");
+        System.out.println("4. Customer ID");
+        System.out.println("0. Cancel");
+
+        int choice = InputValidator.getIntInput("Enter your choice: ");
+
+        String field;
+        switch (choice) {
+            case 1:
+                field = "order_id";
+                break;
+            case 2:
+                field = "order_date";
+                break;
+            case 3:
+                field = "total_amount";
+                break;
+            case 4:
+                field = "customer_id";
+                break;
+            case 0:
+                return;
+            default:
+                System.out.println("Invalid choice.");
+                return;
+        }
+
+        boolean ascending = InputValidator.getConfirmation("Sort in ascending order? (y/n): ");
+
+        try {
+            List<Order> sortedOrders = orderService.sort(field, ascending);
+
+            if (sortedOrders.isEmpty()) {
+                System.out.println("No orders available to sort.");
+            } else {
+                System.out.println("\n=== SORTED ORDERS ===");
+                System.out.println("Sorted by " + field + " (" + (ascending ? "ascending" : "descending") + "):");
+                DisplayFormatter.displayOrdersTable(sortedOrders);
+            }
+        } catch (Exception e) {
+            System.out.println("Error sorting orders: " + e.getMessage());
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        InputValidator.getStringInput("");
+    }
+
+    /**
+     * Filter orders by status using OrderService
+     */
+    public void filterOrdersByStatus() {
+        System.out.println("=== FILTER ORDERS BY STATUS ===");
+        System.out.println("Filter by status:");
+        System.out.println("1. PENDING");
+        System.out.println("2. PROCESSING");
+        System.out.println("3. SHIPPED");
+        System.out.println("4. DELIVERED");
+        System.out.println("5. CANCELLED");
+        System.out.println("0. Cancel");
+
+        int choice = InputValidator.getIntInput("Enter your choice: ");
+
+        OrderStatus status;
+        switch (choice) {
+            case 1:
+                status = OrderStatus.PENDING;
+                break;
+            case 2:
+                status = OrderStatus.PROCESSING;
+                break;
+            case 3:
+                status = OrderStatus.SHIPPED;
+                break;
+            case 4:
+                status = OrderStatus.DELIVERED;
+                break;
+            case 5:
+                status = OrderStatus.CANCELLED;
+                break;
+            case 0:
+                return;
+            default:
+                System.out.println("Invalid choice.");
+                return;
+        }
+
+        boolean ascending = InputValidator.getConfirmation("Sort results in ascending order by Order ID? (y/n): ");
+
+        try {
+            List<Order> filteredOrders = orderService.filter(status, ascending);
+
+            if (filteredOrders.isEmpty()) {
+                System.out.println("No orders found with status: " + status);
+            } else {
+                System.out.println("\n=== FILTERED ORDERS ===");
+                System.out.println("Orders with status '" + status + "':");
+                DisplayFormatter.displayOrdersTable(filteredOrders);
+            }
+        } catch (Exception e) {
+            System.out.println("Error filtering orders: " + e.getMessage());
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        InputValidator.getStringInput("");
     }
 }

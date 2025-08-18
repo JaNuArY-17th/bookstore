@@ -191,15 +191,25 @@ public class DisplayFormatter {
     }
 
     /**
-     * Display books in a simple list format
+     * Display books in a simple list format with stock quantity
      * @param books List of books to display
      */
     public static void displayBookList(List<Book> books) {
+        if (books == null || books.isEmpty()) {
+            System.out.println("No books to display.");
+            return;
+        }
+
+        // Print header
+        System.out.printf("%-30s %-20s %-10s %-8s%n", "Title", "Author", "Price", "Stock");
+        System.out.println("=".repeat(70));
+
         for (Book book : books) {
-            System.out.printf("%-30s by %-20s - $%.2f%n",
+            System.out.printf("%-30s %-20s $%-9.2f %-8d%n",
                     InputValidator.truncate(book.getTitle(), 30),
                     InputValidator.truncate(book.getAuthor(), 20),
-                    book.getPrice());
+                    book.getPrice(),
+                    book.getStockQuantity());
         }
     }
 

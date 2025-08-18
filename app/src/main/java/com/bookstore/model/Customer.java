@@ -33,6 +33,18 @@ public class Customer extends User {
         this.emailNotifications = true;
     }
 
+    // Constructor for creating new customers (without ID - for AUTO_INCREMENT)
+    public Customer(String name, String email, String address) {
+        this();
+        this.customerId = 0; // Will be set by database AUTO_INCREMENT
+        this.firstName = name.split(" ")[0];
+        this.lastName = name.length() > this.firstName.length() ?
+                      name.substring(this.firstName.length() + 1) : "";
+        this.email = email;
+        this.address = address;
+    }
+
+    // Constructor for existing customers (with ID - from database)
     public Customer(int customerId, String name, String email, String address) {
         this();
         this.customerId = customerId;

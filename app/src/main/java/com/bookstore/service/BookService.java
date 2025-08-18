@@ -68,16 +68,38 @@ public class BookService {
     }
     
     /**
-     * Filter books by category (placeholder - requires category field in Book model)
+     * Filter books by category
      * @param category The category to filter by
      * @param ascending True for ascending order, false for descending
      * @return Filtered list of books
      */
     public List<Book> filter(String category, boolean ascending) {
-        // TODO: This requires adding a category field to the Book model
-        // For now, return all books sorted by title
-        System.out.println("Category filtering not yet implemented - requires Book model enhancement");
-        return sort("title", ascending);
+        List<Book> books = getCachedBooksForCurrentUser();
+        if (books == null || books.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Filter by category
+        List<Book> filteredBooks = books.stream()
+                .filter(book -> category.equals(book.getCategory()))
+                .collect(Collectors.toList());
+
+        // Sort by title
+        Comparator<Book> comparator = Comparator.comparing(Book::getTitle, String.CASE_INSENSITIVE_ORDER);
+        if (!ascending) {
+            comparator = comparator.reversed();
+        }
+
+        SortingAlgorithms.quickSort(filteredBooks, comparator);
+        return filteredBooks;
+    }
+
+    /**
+     * Get all available categories
+     * @return List of unique categories
+     */
+    public List<String> getAllCategories() {
+        return bookDAO.getAllCategories();
     }
     
     /**

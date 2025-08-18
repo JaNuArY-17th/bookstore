@@ -9,10 +9,20 @@ public class OrderItem {
     // Note: Removed redundant 'book' field as bookId is sufficient for lookups
     // Book details should be retrieved via BookDAO.getBookById(bookId) when needed
 
-    // Constructors
+    // Default constructor
     public OrderItem() {
     }
 
+    // Constructor for creating new order items (without IDs - for AUTO_INCREMENT)
+    public OrderItem(int bookId, int quantity, double unitPrice) {
+        this.orderItemId = 0; // Will be set by database AUTO_INCREMENT
+        this.orderId = 0; // Will be set when order is created
+        this.bookId = bookId;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+    }
+
+    // Constructor for existing order items (with IDs - from database)
     public OrderItem(int orderItemId, int orderId, int bookId, int quantity, double unitPrice) {
         this.orderItemId = orderItemId;
         this.orderId = orderId;

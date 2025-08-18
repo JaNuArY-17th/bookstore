@@ -13,7 +13,7 @@ import java.util.List;
 
 public class BookDAO {
     public int addBook(Book book) {
-        String sql = "INSERT INTO Books (title, author, isbn, price, stock_quantity) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Books (title, author, isbn, price, stock_quantity, category) VALUES (?, ?, ?, ?, ?, ?)";
         int bookId = -1;
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -23,6 +23,7 @@ public class BookDAO {
             pstmt.setString(3, book.getIsbn());
             pstmt.setDouble(4, book.getPrice());
             pstmt.setInt(5, book.getStockQuantity());
+            pstmt.setString(6, book.getCategory());
 
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
@@ -59,6 +60,7 @@ public class BookDAO {
                     book.setIsbn(rs.getString("isbn"));
                     book.setPrice(rs.getDouble("price"));
                     book.setStockQuantity(rs.getInt("stock_quantity"));
+                    book.setCategory(rs.getString("category"));
                 }
             }
         } catch (SQLException e) {
@@ -84,6 +86,7 @@ public class BookDAO {
                     book.setIsbn(rs.getString("isbn"));
                     book.setPrice(rs.getDouble("price"));
                     book.setStockQuantity(rs.getInt("stock_quantity"));
+                    book.setCategory(rs.getString("category"));
                 }
             }
         } catch (SQLException e) {
@@ -93,7 +96,7 @@ public class BookDAO {
     }
 
     public boolean updateBook(Book book) {
-        String sql = "UPDATE Books SET title = ?, author = ?, isbn = ?, price = ?, stock_quantity = ? WHERE book_id = ?";
+        String sql = "UPDATE Books SET title = ?, author = ?, isbn = ?, price = ?, stock_quantity = ?, category = ? WHERE book_id = ?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -102,7 +105,8 @@ public class BookDAO {
             pstmt.setString(3, book.getIsbn());
             pstmt.setDouble(4, book.getPrice());
             pstmt.setInt(5, book.getStockQuantity());
-            pstmt.setInt(6, book.getBookId());
+            pstmt.setString(6, book.getCategory());
+            pstmt.setInt(7, book.getBookId());
 
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
@@ -183,6 +187,7 @@ public class BookDAO {
                 book.setIsbn(rs.getString("isbn"));
                 book.setPrice(rs.getDouble("price"));
                 book.setStockQuantity(rs.getInt("stock_quantity"));
+                book.setCategory(rs.getString("category"));
                 books.add(book);
             }
         } catch (SQLException e) {
@@ -191,5 +196,58 @@ public class BookDAO {
         return books;
     }
 
+    /**
+     * Get all distinct categories from the database
+     * @return List of unique categories
+     */
+    public List<String> getAllCategories() {
+        List<String> categories = new ArrayList<>();
+        String sql = "SELECT DISTINCT category FROM Books WHERE category IS NOT NULL AND category != '' ORDER BY category";
+        try (Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
 
+            while (rs.next()) {
+                String category = rs.getString("category");
+                if (category != null && !category.trim().isEmpty()) {
+                    categories.add(category);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting categories: " + e.getMessage());
+        }
+        return categories;
+    }
+
+    /**
+     * Get books by category
+     * @param category The category to filter by
+     * @return List of books in the specified category
+     */
+    public List<Book> getBooksByCategory(String category) {
+        List<Book> books = new ArrayList<>();
+        String sql = "SELECT * FROM Books WHERE category = ? ORDER BY title";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, category);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Book book = new Book();
+                    book.setBookId(rs.getInt("book_id"));
+                    book.setTitle(rs.getString("title"));
+                    book.setAuthor(rs.getString("author"));
+                    book.setIsbn(rs.getString("isbn"));
+                    book.setPrice(rs.getDouble("price"));
+                    book.setStockQuantity(rs.getInt("stock_quantity"));
+                    book.setCategory(rs.getString("category"));
+                    books.add(book);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting books by category: " + e.getMessage());
+        }
+        return books;
+    }
 }

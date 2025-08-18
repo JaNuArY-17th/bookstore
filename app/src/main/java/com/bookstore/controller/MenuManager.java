@@ -118,11 +118,12 @@ public class MenuManager {
         System.out.println("=== CUSTOMER DASHBOARD ===");
         System.out.println("1. Browse Books");
         System.out.println("2. Search Books");
-        System.out.println("3. My Cart (" + authService.getCartService().getItemCount() + " items)");
-        System.out.println("4. My Orders");
-        System.out.println("5. Place New Order");
-        System.out.println("6. Profile Settings");
-        System.out.println("7. Logout");
+        System.out.println("3. Filter Books by Category");
+        System.out.println("4. My Cart (" + authService.getCartService().getItemCount() + " items)");
+        System.out.println("5. My Orders");
+        System.out.println("6. Place New Order");
+        System.out.println("7. Profile Settings");
+        System.out.println("8. Logout");
         System.out.println("0. Exit");
 
         int choice = InputValidator.getIntInput("Enter your choice: ");
@@ -135,18 +136,21 @@ public class MenuManager {
                 orderController.showCustomerSearchBooks();
                 break;
             case 3:
-                orderController.showCartManagement();
+                orderController.showCustomerFilterBooks();
                 break;
             case 4:
-                orderController.showCustomerViewOrders();
+                orderController.showCartManagement();
                 break;
             case 5:
-                orderController.showCustomerPlaceOrder();
+                orderController.showCustomerViewOrders();
                 break;
             case 6:
-                authController.showUserProfileMenu();
+                orderController.showCustomerPlaceOrder();
                 break;
             case 7:
+                authController.showUserProfileMenu();
+                break;
+            case 8:
                 authService.logout();
                 System.out.println("Logged out successfully.");
                 return true; // Continue to login menu

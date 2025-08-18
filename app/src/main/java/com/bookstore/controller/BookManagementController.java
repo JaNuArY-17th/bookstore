@@ -33,10 +33,13 @@ public class BookManagementController {
             System.out.println("2. View All Books");
             System.out.println("3. Search Book by ID");
             System.out.println("4. Search Book by ISBN");
-            System.out.println("5. Update Book");
-            System.out.println("6. Delete Book");
-            System.out.println("7. Update Stock");
-            System.out.println("8. Refresh Book List");
+            System.out.println("5. Advanced Search Books");
+            System.out.println("6. Sort Books");
+            System.out.println("7. Filter Books by Category");
+            System.out.println("8. Update Book");
+            System.out.println("9. Delete Book");
+            System.out.println("10. Update Stock");
+            System.out.println("11. Refresh Book List");
             System.out.println("0. Back to Main Menu");
 
             int choice = InputValidator.getIntInput("Enter your choice: ");
@@ -55,15 +58,24 @@ public class BookManagementController {
                     searchBookByIsbn();
                     break;
                 case 5:
-                    updateBook();
+                    advancedSearchBooks();
                     break;
                 case 6:
-                    deleteBook();
+                    sortBooks();
                     break;
                 case 7:
-                    updateBookStock();
+                    filterBooksByCategory();
                     break;
                 case 8:
+                    updateBook();
+                    break;
+                case 9:
+                    deleteBook();
+                    break;
+                case 10:
+                    updateBookStock();
+                    break;
+                case 11:
                     // Refresh - just continue the loop
                     break;
                 case 0:
@@ -84,8 +96,15 @@ public class BookManagementController {
         String isbn = InputValidator.getTrimmedStringInput("ISBN: ");
         double price = InputValidator.getDoubleInput("Price: $");
         int stock = InputValidator.getIntInput("Stock Quantity: ");
+        String category = InputValidator.getTrimmedStringInput("Category (optional): ");
 
-        Book book = new Book(0, title, author, isbn, price, stock);
+        // Use constructor without ID (AUTO_INCREMENT will handle it)
+        Book book;
+        if (category.isEmpty()) {
+            book = new Book(title, author, isbn, price, stock);
+        } else {
+            book = new Book(title, author, isbn, price, stock, category);
+        }
         // Note: Need to get current user for admin check
         // For now, assume admin access since this is admin menu
         int bookId = bookDAO.addBook(book); // Keep using DAO for now until we have user context
@@ -321,5 +340,147 @@ public class BookManagementController {
         System.out.println("\nSorting by price (Quick Sort):");
         SortingAlgorithms.quickSortBooks(books, SortingAlgorithms.BOOK_PRICE_COMPARATOR);
         DisplayFormatter.displayBookList(books);
+    }
+
+    /**
+     * Advanced search books using BookService
+     */
+    public void advancedSearchBooks() {
+        System.out.println("=== ADVANCED BOOK SEARCH ===");
+        String searchTerm = InputValidator.getTrimmedStringInput("Enter search term (title, author, ISBN, or book ID): ");
+
+        if (searchTerm.isEmpty()) {
+            System.out.println("Search term cannot be empty.");
+            return;
+        }
+
+        try {
+            List<Book> searchResults = bookService.search(searchTerm);
+
+            if (searchResults.isEmpty()) {
+                System.out.println("No books found matching: " + searchTerm);
+            } else {
+                System.out.println("\n=== SEARCH RESULTS ===");
+                System.out.println("Found " + searchResults.size() + " book(s) matching: " + searchTerm);
+                DisplayFormatter.displayBookList(searchResults);
+            }
+        } catch (Exception e) {
+            System.out.println("Error performing search: " + e.getMessage());
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        InputValidator.getStringInput("");
+    }
+
+    /**
+     * Sort books using BookService
+     */
+    public void sortBooks() {
+        System.out.println("=== SORT BOOKS ===");
+        System.out.println("Sort by:");
+        System.out.println("1. Book ID");
+        System.out.println("2. Title");
+        System.out.println("3. Author");
+        System.out.println("4. Price");
+        System.out.println("5. Stock Quantity");
+        System.out.println("0. Cancel");
+
+        int choice = InputValidator.getIntInput("Enter your choice: ");
+
+        String field;
+        switch (choice) {
+            case 1:
+                field = "book_id";
+                break;
+            case 2:
+                field = "title";
+                break;
+            case 3:
+                field = "author";
+                break;
+            case 4:
+                field = "price";
+                break;
+            case 5:
+                field = "stock_quantity";
+                break;
+            case 0:
+                return;
+            default:
+                System.out.println("Invalid choice.");
+                return;
+        }
+
+        boolean ascending = InputValidator.getConfirmation("Sort in ascending order? (y/n): ");
+
+        try {
+            List<Book> sortedBooks = bookService.sort(field, ascending);
+
+            if (sortedBooks.isEmpty()) {
+                System.out.println("No books available to sort.");
+            } else {
+                System.out.println("\n=== SORTED BOOKS ===");
+                System.out.println("Sorted by " + field + " (" + (ascending ? "ascending" : "descending") + "):");
+                DisplayFormatter.displayBookList(sortedBooks);
+            }
+        } catch (Exception e) {
+            System.out.println("Error sorting books: " + e.getMessage());
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        InputValidator.getStringInput("");
+    }
+
+    /**
+     * Filter books by category using BookService
+     */
+    public void filterBooksByCategory() {
+        System.out.println("=== FILTER BOOKS BY CATEGORY ===");
+
+        try {
+            // Get all available categories
+            List<String> categories = bookService.getAllCategories();
+
+            if (categories.isEmpty()) {
+                System.out.println("No categories available.");
+                return;
+            }
+
+            // Display available categories
+            System.out.println("Available categories:");
+            for (int i = 0; i < categories.size(); i++) {
+                System.out.println((i + 1) + ". " + categories.get(i));
+            }
+            System.out.println("0. Cancel");
+
+            int choice = InputValidator.getIntInput("Enter your choice: ");
+
+            if (choice == 0) {
+                return;
+            }
+
+            if (choice < 1 || choice > categories.size()) {
+                System.out.println("Invalid choice.");
+                return;
+            }
+
+            String selectedCategory = categories.get(choice - 1);
+            boolean ascending = InputValidator.getConfirmation("Sort results in ascending order? (y/n): ");
+
+            List<Book> filteredBooks = bookService.filter(selectedCategory, ascending);
+
+            if (filteredBooks.isEmpty()) {
+                System.out.println("No books found in category: " + selectedCategory);
+            } else {
+                System.out.println("\n=== FILTERED BOOKS ===");
+                System.out.println("Books in category '" + selectedCategory + "' (" + filteredBooks.size() + " books):");
+                DisplayFormatter.displayBookList(filteredBooks);
+            }
+        } catch (Exception e) {
+            System.out.println("Error filtering books: " + e.getMessage());
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        InputValidator.getStringInput("");
     }
 }

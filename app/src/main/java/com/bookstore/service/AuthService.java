@@ -46,7 +46,6 @@ public class AuthService {
     private void initializeUserSession(User user) {
         try {
             sessionManager.initializeUserSession(user);
-            System.out.println("Session initialized successfully for: " + user.getUsername());
         } catch (Exception e) {
             System.err.println("Error initializing session: " + e.getMessage());
             // Continue with login even if session initialization fails
@@ -64,8 +63,6 @@ public class AuthService {
 
         this.currentUser = null;
         this.cartService.clearCart(); // Clear cart on logout
-
-        System.out.println("User logged out and session cleared");
     }
 
     /**

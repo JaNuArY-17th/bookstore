@@ -84,7 +84,7 @@ public class Main {
 
         // Initialize controllers with their dependencies
         bookController = new BookManagementController(bookDAO, bookService);
-        customerController = new CustomerManagementController(customerDAO, customerService);
+        customerController = new CustomerManagementController(customerDAO, customerService, authService);
         orderController = new OrderManagementController(orderDAO, bookDAO, customerDAO, orderService, authService, bookService);
         authController = new AuthenticationController(authService, userDAO, customerDAO);
         menuManager = new MenuManager(authService, bookController, customerController, orderController, authController);

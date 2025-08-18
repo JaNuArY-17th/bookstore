@@ -243,16 +243,12 @@ public class QueueService {
             // Load all pending and processing orders
             List<Order> allOrders = orderDAO.getAllOrders();
             
-            int loadedCount = 0;
             for (Order order : allOrders) {
                 String status = order.getStatus().name();
                 if ("PENDING".equals(status) || "PROCESSING".equals(status)) {
                     OrderQueueManager.addOrderToQueues(order, currentUser);
-                    loadedCount++;
                 }
             }
-            
-            System.out.println("Loaded " + loadedCount + " existing orders into queues");
             
         } catch (Exception e) {
             System.err.println("Error loading existing orders into queues: " + e.getMessage());
@@ -269,7 +265,6 @@ public class QueueService {
         }
         
         OrderQueueManager.clearUserQueue(userId);
-        System.out.println("Cleared queue for user ID: " + userId + " by admin: " + admin.getUsername());
         
         return true;
     }
@@ -284,7 +279,6 @@ public class QueueService {
         }
         
         OrderQueueManager.clearAllQueues();
-        System.out.println("All queues cleared by admin: " + admin.getUsername());
         
         return true;
     }

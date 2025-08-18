@@ -59,7 +59,7 @@ public class CartService {
         }
         
         // Add new item to cart
-        OrderItem newItem = new OrderItem(0, 0, bookId, quantity, book.getPrice());
+        OrderItem newItem = new OrderItem(bookId, quantity, book.getPrice());
         cartItems.add(newItem);
         System.out.println("Added " + quantity + " copies of '" + book.getTitle() + "' to cart!");
         return true;

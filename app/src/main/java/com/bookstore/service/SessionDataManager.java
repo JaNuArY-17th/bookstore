@@ -64,9 +64,6 @@ public class SessionDataManager {
         
         // Initialize queues from cached orders
         initializeQueuesFromCache();
-        
-        System.out.println("Session initialized for " + user.getRole() + ": " + user.getUsername());
-        logCacheStatistics();
     }
     
     /**
@@ -79,8 +76,6 @@ public class SessionDataManager {
             this.cachedBooks = bookDAO.getAllBooks();
             this.cachedOrders = orderDAO.getAllOrders();
             this.cachedCustomers = customerDAO.getAllCustomers();
-            
-            System.out.println("Admin session data loaded successfully");
         } catch (Exception e) {
             System.err.println("Error loading admin session data: " + e.getMessage());
             // Initialize empty lists to prevent null pointer exceptions
@@ -98,8 +93,6 @@ public class SessionDataManager {
             this.cachedCustomers = null; // No access to customer data
             this.cachedBooks = bookDAO.getAllBooks(); // Can view all books
             this.cachedOrders = orderDAO.getOrdersByCustomerId(currentUser.getUserId()); // Only their orders
-            
-            System.out.println("Customer session data loaded successfully");
         } catch (Exception e) {
             System.err.println("Error loading customer session data: " + e.getMessage());
             // Initialize empty lists to prevent null pointer exceptions
@@ -118,21 +111,16 @@ public class SessionDataManager {
             OrderQueueManager.clearAllQueues();
             
             if (cachedOrders == null || cachedOrders.isEmpty()) {
-                System.out.println("No orders to load into queues");
                 return;
             }
-            
-            int loadedCount = 0;
+
             for (Order order : cachedOrders) {
                 String status = order.getStatus().name();
                 // Only load pending and processing orders into queues
                 if ("PENDING".equals(status) || "PROCESSING".equals(status)) {
                     OrderQueueManager.addOrderToQueues(order, currentUser);
-                    loadedCount++;
                 }
             }
-            
-            System.out.println("Loaded " + loadedCount + " orders into queues from cached data");
             
         } catch (Exception e) {
             System.err.println("Error initializing queues from cache: " + e.getMessage());
@@ -151,8 +139,6 @@ public class SessionDataManager {
         
         // Clear current user
         this.currentUser = null;
-        
-        System.out.println("Session data and queues cleared");
     }
     
     /**
@@ -221,17 +207,7 @@ public class SessionDataManager {
         }
     }
     
-    /**
-     * Log cache statistics for debugging
-     */
-    private void logCacheStatistics() {
-        System.out.println("=== CACHE STATISTICS ===");
-        System.out.println("Users: " + (cachedUsers != null ? cachedUsers.size() : "N/A"));
-        System.out.println("Books: " + (cachedBooks != null ? cachedBooks.size() : "N/A"));
-        System.out.println("Orders: " + (cachedOrders != null ? cachedOrders.size() : "N/A"));
-        System.out.println("Customers: " + (cachedCustomers != null ? cachedCustomers.size() : "N/A"));
-        System.out.println("========================");
-    }
+
     
     // Getters for cached data
     public List<User> getCachedUsers() {
