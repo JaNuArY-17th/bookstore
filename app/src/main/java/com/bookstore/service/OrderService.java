@@ -9,6 +9,7 @@ import com.bookstore.model.OrderStatus;
 import com.bookstore.model.User;
 
 import com.bookstore.util.algorithms.SearchingAlgorithms;
+import com.bookstore.util.algorithms.SortingAlgorithms;
 import com.bookstore.util.queue.OrderQueueManager;
 import com.bookstore.service.QueueService; 
 
@@ -95,14 +96,8 @@ public class OrderService {
         }
     }
 
-    // Note: Legacy processNextOrderInQueue() method removed. Use processNextOrderInQueue(User) instead.
-
     // Search order by ID
     public Order findOrderById(int orderId) {
-        // In a real system, you would prefer to query directly from DB using SQL for ID search
-        // because order_id is a primary key and is often indexed, which is very efficient.
-        // However, to illustrate Binary Search on a memory dataset:
-
         // Step 1: Get all orders from database.
         // (Need getAllOrders() method in OrderDAO)
         List<Order> allOrdersFromDb = orderDAO.getAllOrders();
@@ -111,19 +106,14 @@ public class OrderService {
             return null;
         }
         
-        // Step 2: Sort order list by OrderId (if not already sorted)
-        // Database Index usually works better for this purpose in a real system.
-        // This sorting is only for demonstration of Binary Search on a List in Java.
-        allOrdersFromDb.sort(SearchingAlgorithms.ORDER_ID_COMPARATOR);
+        // Step 2: Sort order list by OrderId 
+        SortingAlgorithms.quickSort(allOrdersFromDb, SearchingAlgorithms.ORDER_ID_COMPARATOR);
 
         // Step 3: Perform binary search
         return SearchingAlgorithms.binarySearchOrderById(allOrdersFromDb, orderId);
     }
 
     // Queue Management Methods - Delegated to QueueService
-    // Note: These methods provide a unified interface for order and queue operations
-    // All queue-specific logic is handled by QueueService to maintain separation of concerns
-
     public List<Order> getUserQueueOrders(User user) {
         return queueService.getUserQueueOrders(user);
     }

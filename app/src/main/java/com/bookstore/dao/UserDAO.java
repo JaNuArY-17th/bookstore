@@ -88,8 +88,9 @@ public class UserDAO {
      * Add admin-specific details to the Admins table
      */
     private void addAdminDetails(Connection conn, Admin admin, int userId) throws SQLException {
-        String adminSql = "INSERT INTO Admins (user_id, department, admin_level, permissions, employee_id, hire_date) " +
-                         "VALUES (?, ?, ?, ?, ?, ?)";
+        String adminSql = "INSERT INTO Admins (user_id, department, admin_level, permissions, employee_id, hire_date) "
+                +
+                "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(adminSql)) {
             pstmt.setInt(1, userId);
@@ -121,8 +122,8 @@ public class UserDAO {
      */
     private void addCustomerDetails(Connection conn, Customer customer, int userId) throws SQLException {
         String customerSql = "INSERT INTO Customers (user_id, name, email, address, phone, " +
-                           "preferred_payment_method, email_notifications, customer_type) " +
-                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                "preferred_payment_method, email_notifications, customer_type) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(customerSql)) {
             pstmt.setInt(1, userId);
@@ -152,9 +153,9 @@ public class UserDAO {
     public User getUserByUsername(String username) {
         String sql = "SELECT * FROM Users WHERE username = ? AND is_active = true";
         User user = null;
-        
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, username);
 
@@ -172,9 +173,9 @@ public class UserDAO {
     public User getUserById(int userId) {
         String sql = "SELECT * FROM Users WHERE user_id = ?";
         User user = null;
-        
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, userId);
 
@@ -191,9 +192,9 @@ public class UserDAO {
 
     public boolean updateLastLogin(int userId) {
         String sql = "UPDATE Users SET last_login = CURRENT_TIMESTAMP WHERE user_id = ?";
-        
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, userId);
             int rowsAffected = pstmt.executeUpdate();
@@ -206,9 +207,9 @@ public class UserDAO {
 
     public boolean updateUser(User user) {
         String sql = "UPDATE Users SET username = ?, email = ?, first_name = ?, last_name = ?, role = ?, is_active = ? WHERE user_id = ?";
-        
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getEmail());
@@ -228,9 +229,9 @@ public class UserDAO {
 
     public boolean changePassword(int userId, String newPassword) {
         String sql = "UPDATE Users SET password = ? WHERE user_id = ?";
-        
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, newPassword);
             pstmt.setInt(2, userId);
@@ -246,10 +247,10 @@ public class UserDAO {
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
         String sql = "SELECT * FROM Users ORDER BY created_at DESC";
-        
+
         try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
                 users.add(mapResultSetToUser(rs));
@@ -262,9 +263,9 @@ public class UserDAO {
 
     public boolean deactivateUser(int userId) {
         String sql = "UPDATE Users SET is_active = false WHERE user_id = ?";
-        
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, userId);
             int rowsAffected = pstmt.executeUpdate();
@@ -318,7 +319,7 @@ public class UserDAO {
         String sql = "SELECT a.*, u.* FROM Admins a JOIN Users u ON a.user_id = u.user_id WHERE a.user_id = ?";
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, userId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -343,7 +344,7 @@ public class UserDAO {
         String sql = "SELECT c.*, u.* FROM Customers c JOIN Users u ON c.user_id = u.user_id WHERE c.user_id = ?";
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, userId);
             try (ResultSet rs = pstmt.executeQuery()) {
