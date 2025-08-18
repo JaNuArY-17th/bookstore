@@ -26,9 +26,6 @@ public class OrderQueueManager {
     // Queue for completed orders (for history/reporting)
     private static final QueueADT<Order> completedQueue = new LinkedQueue<>(2000);
     
-    // Note: Unused comparators removed (ORDER_DATE_COMPARATOR, ORDER_PRIORITY_COMPARATOR)
-    // If custom ordering is needed in the future, comparators can be added back
-    
     /**
      * Add order to appropriate queues based on user role and order status
      */

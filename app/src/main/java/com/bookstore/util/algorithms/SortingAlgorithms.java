@@ -27,8 +27,6 @@ public class SortingAlgorithms {
         };
     }
 
-    // Note: Deprecated BOOK_TITLE_COMPARATOR removed. Use createBookTitleComparator(BookDAO) instead.
-
     // Comparators for Book (for sorting books directly)
     public static final Comparator<Book> BOOK_TITLE_COMPARATOR_BOOK = (book1, book2) -> {
         if (book1.getTitle() == null) return -1;

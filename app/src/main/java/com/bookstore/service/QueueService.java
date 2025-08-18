@@ -311,9 +311,6 @@ public class QueueService {
         return OrderQueueManager.getCompletedQueue().toList();
     }
     
-    // Note: reassignOrder() method removed as it had incomplete implementation
-    // If needed, this functionality should be implemented with proper DAO support
-    
     // Helper methods
     private boolean isAdmin(User user) {
         return user != null && user.getRole() == Role.ADMIN;
@@ -329,6 +326,5 @@ public class QueueService {
         );
 
         System.out.println(logMessage);
-        // In a real system, you might want to log this to a file or database
     }
 }
